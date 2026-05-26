@@ -1,0 +1,19 @@
+Quedalle is a minimal, tile-based Android home screen built with Jetpack Compose. It is designed for users who want full control over their home screen layout without any bloat, tracking, or accounts.
+
+TILE TYPES
+
+- App tiles: launch any installed app, with live notification badge counts
+- Spacer tiles: colored blank tiles to structure your grid visually
+- Divider tiles: thin horizontal lines to separate groups of tiles
+
+CUSTOMIZATION
+
+- Drag and drop to reorder any tile
+- 12 color presets per tile, plus app-color and transparent options
+- Inline app search to find and launch apps quickly
+
+PRIVACY
+
+- No internet permission
+- No accounts, no cloud sync, no analytics, no ads
+- Open source under GPL-3.0

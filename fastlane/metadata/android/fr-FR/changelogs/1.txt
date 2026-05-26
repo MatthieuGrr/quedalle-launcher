@@ -1,0 +1,6 @@
+Version initiale.
+
+- Tuiles App, Spacer et Divider
+- Réorganisation par glisser-déposer
+- Compteurs de notifications
+- Palette de 12 couleurs par tuile

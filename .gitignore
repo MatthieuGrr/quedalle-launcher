@@ -1,0 +1,31 @@
+# Gradle
+.gradle/
+build/
+app/build/
+
+# Android Studio
+*.iml
+.idea/
+local.properties
+*.orig
+
+# Keys — never commit
+*.keystore
+*.jks
+!debug.keystore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kotlin / Java
+*.class
+*.jar
+*.war
+*.aar
+
+# Generated
+/captures/
+.externalNativeBuild/
+.cxx/
+.claude/

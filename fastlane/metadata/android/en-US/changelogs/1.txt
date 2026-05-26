@@ -1,0 +1,6 @@
+Initial release.
+
+- App, Spacer, and Divider tile types
+- Drag and drop reordering
+- Notification badge counts
+- Color picker with 12 presets

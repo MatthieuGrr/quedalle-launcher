@@ -1,0 +1,1 @@
+-keep class dev.mlg.launcher.service.LauncherNotificationListener { *; }

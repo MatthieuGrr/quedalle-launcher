@@ -1,0 +1,19 @@
+Quedalle est un lanceur d'écran d'accueil Android minimaliste basé sur des tuiles, construit avec Jetpack Compose. Il est conçu pour les utilisateurs qui veulent un contrôle total sur leur écran d'accueil, sans publicité, sans tracking et sans compte.
+
+TYPES DE TUILES
+
+- Tuiles d'applications : lance n'importe quelle application installée, avec compteur de notifications en temps réel
+- Tuiles Spacer : tuiles colorées vides pour structurer visuellement la grille
+- Tuiles Séparateur : lignes horizontales fines pour séparer les groupes de tuiles
+
+PERSONNALISATION
+
+- Réorganisation par glisser-déposer
+- 12 couleurs prédéfinies par tuile, plus les options couleur-app et transparent
+- Recherche d'applications intégrée
+
+CONFIDENTIALITÉ
+
+- Aucune permission internet
+- Pas de compte, pas de synchronisation cloud, pas d'analytics, pas de publicité
+- Code source ouvert sous licence GPL-3.0
