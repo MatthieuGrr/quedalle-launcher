@@ -1,0 +1,9 @@
+Corrections de bugs.
+
+- La liste d'applications se met à jour en temps réel lors d'une installation ou désinstallation
+- Correction du glisser-déposer en présence de tuiles Séparateur
+- Correction des badges de notification persistants après reconnexion du service
+- Le mode édition survit désormais aux rotations d'écran
+- La bannière d'accès aux notifications s'affiche correctement au démarrage
+- Correction d'un doublon de tuile lors d'un épinglage/désépinglage rapide
+- Correction d'un crash silencieux si le stockage est plein lors de la sauvegarde

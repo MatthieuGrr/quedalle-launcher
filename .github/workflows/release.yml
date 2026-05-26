@@ -18,13 +18,13 @@ jobs:
         run: echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
 
       - name: Build APK
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleRelease
 
       - name: Create GitHub Release
         run: |
           gh release create "$GITHUB_REF_NAME" \
             --title "Quedalle $GITHUB_REF_NAME" \
             --generate-notes \
-            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/release/app-release-unsigned.apk
         env:
           GH_TOKEN: ${{ github.token }}

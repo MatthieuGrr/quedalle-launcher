@@ -231,6 +231,7 @@ private fun TileGrid(
 
     var draggingKey by remember { mutableStateOf<String?>(null) }
     var dragAcc     by remember { mutableStateOf(Offset.Zero) }
+    val currentTiles by rememberUpdatedState(tiles)
 
     LaunchedEffect(tiles) {
         if (draggingKey == null) {
@@ -306,12 +307,13 @@ private fun TileGrid(
                             },
                             onDragEnd    = {
                                 draggingKey = null
-                                onSaveOrder?.invoke(localTiles.toList())
+                                val validIds = currentTiles.map { it.id }.toSet()
+                                onSaveOrder?.invoke(localTiles.filter { it.id in validIds })
                             },
                             onDragCancel = {
                                 draggingKey = null
                                 localTiles.clear()
-                                localTiles.addAll(tiles)
+                                localTiles.addAll(currentTiles)
                             },
                         )
                     }

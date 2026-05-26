@@ -26,8 +26,8 @@ A minimal, tile-based Android home screen launcher built with Jetpack Compose.
 ## Build from source
 
 ```bash
-git clone https://github.com/MatthieuGrr/custom-launcher.git
-cd custom-launcher
+git clone https://github.com/MatthieuGrr/quedalle-launcher.git
+cd quedalle-launcher
 ./gradlew assembleRelease
 ```
 

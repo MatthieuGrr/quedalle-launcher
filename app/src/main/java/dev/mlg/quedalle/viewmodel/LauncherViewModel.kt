@@ -18,6 +18,7 @@ import dev.mlg.quedalle.model.AppInfo
 import dev.mlg.quedalle.model.TileItem
 import dev.mlg.quedalle.service.LauncherNotificationListener
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -44,9 +45,11 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
     private val _allApps        = MutableStateFlow<List<AppInfo>>(emptyList())
     private val _hasNotifAccess = MutableStateFlow(isNotificationServiceEnabled())
 
+    private var refreshJob: Job? = null
     private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            viewModelScope.launch(Dispatchers.IO) { _allApps.value = repo.getInstalledApps() }
+            refreshJob?.cancel()
+            refreshJob = viewModelScope.launch(Dispatchers.IO) { _allApps.value = repo.getInstalledApps() }
         }
     }
 

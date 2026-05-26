@@ -2,14 +2,14 @@ Categories:
   - System
 License: GPL-3.0-only
 AuthorName: Matthieu Georger
-SourceCode: https://github.com/MatthieuGrr/custom-launcher
-IssueTracker: https://github.com/MatthieuGrr/custom-launcher/issues
-Changelog: https://github.com/MatthieuGrr/custom-launcher/releases
+SourceCode: https://github.com/MatthieuGrr/quedalle-launcher
+IssueTracker: https://github.com/MatthieuGrr/quedalle-launcher/issues
+Changelog: https://github.com/MatthieuGrr/quedalle-launcher/releases
 
 AutoName: Quedalle
 
 RepoType: git
-Repo: https://github.com/MatthieuGrr/custom-launcher
+Repo: https://github.com/MatthieuGrr/quedalle-launcher
 
 Builds:
   - versionName: '1.0'
@@ -19,7 +19,14 @@ Builds:
     gradle:
       - yes
 
+  - versionName: '1.1'
+    versionCode: 2
+    commit: v1.1
+    subdir: app
+    gradle:
+      - yes
+
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: '1.0'
-CurrentVersionCode: 1
+CurrentVersion: '1.1'
+CurrentVersionCode: 2

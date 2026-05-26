@@ -1,1 +1,1 @@
--keep class dev.mlg.launcher.service.LauncherNotificationListener { *; }
+-keep class dev.mlg.quedalle.service.LauncherNotificationListener { *; }

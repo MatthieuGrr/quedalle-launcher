@@ -14,13 +14,13 @@ class AppRepository(private val context: Context) {
 
         @Suppress("DEPRECATION")
         val resolveInfos = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            pm.queryIntentActivities(intent, PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_ALL.toLong()))
+            pm.queryIntentActivities(intent, PackageManager.ResolveInfoFlags.of(0L))
         } else {
-            pm.queryIntentActivities(intent, PackageManager.MATCH_ALL)
+            pm.queryIntentActivities(intent, 0)
         }
 
         return resolveInfos
-            .map { AppInfo(packageName = it.activityInfo.packageName, label = it.loadLabel(pm).toString()) }
+            .mapNotNull { ri -> ri.activityInfo?.let { AppInfo(packageName = it.packageName, label = ri.loadLabel(pm).toString()) } }
             .distinctBy { it.packageName }
             .sortedBy { it.label.lowercase() }
     }

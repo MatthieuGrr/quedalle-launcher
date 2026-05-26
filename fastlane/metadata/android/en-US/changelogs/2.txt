@@ -1,0 +1,9 @@
+Bug fixes.
+
+- App list now updates live when apps are installed or uninstalled
+- Fixed drag-and-drop positioning when Divider tiles are present
+- Fixed notification badges persisting after listener reconnect
+- Fixed edit mode surviving screen rotation
+- Notification access banner now shows correctly at startup
+- Fixed duplicate tile on rapid pin/unpin with corrupted data
+- Fixed silent crash on low storage when saving tile order
