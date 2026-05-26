@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,13 +59,25 @@ private val TileColors: List<Int> = listOf(
     0xFF0F4C81.toInt(), 0xFF6B1F1F.toInt(), 0xFF1A5C40.toInt(), 0xFF7A5A10.toInt(),
 )
 
+// ─── Grid layout helpers ──────────────────────────────────────────────────────
+
+private fun gridPositions(tiles: List<TileItem>, columns: Int): List<Pair<Int, Int>> {
+    var row = 0; var col = 0
+    return tiles.map { tile ->
+        Pair(row, col).also {
+            if (tile is TileItem.Divider) { row++; col = 0 }
+            else { col++; if (col == columns) { col = 0; row++ } }
+        }
+    }
+}
+
 // ─── Entry point ─────────────────────────────────────────────────────────────
 
 @Composable
 fun LauncherScreen(vm: LauncherViewModel) {
     val state          by vm.uiState.collectAsStateWithLifecycle()
     var longPressedTile  by remember { mutableStateOf<TileItem?>(null) }
-    var isEditMode       by remember { mutableStateOf(false) }
+    var isEditMode       by rememberSaveable { mutableStateOf(false) }
     var showAddSpacer  by remember { mutableStateOf(false) }
     var showAddDivider by remember { mutableStateOf(false) }
     val focusManager     = LocalFocusManager.current
@@ -150,8 +163,8 @@ fun LauncherScreen(vm: LauncherViewModel) {
                     rows = state.gridRows,
                     onColumnsChange = vm::setGridColumns,
                     onRowsChange    = vm::setGridRows,
-                    onAddSpacer  = { showAddSpacer  = true },
-                    onAddDivider = { showAddDivider = true },
+                    onAddSpacer  = { showAddSpacer = true; showAddDivider = false },
+                    onAddDivider = { showAddDivider = true; showAddSpacer = false },
                     onDone          = { isEditMode = false },
                 )
             }
@@ -276,10 +289,15 @@ private fun TileGrid(
                                 val sy = (dragAcc.y / cellH).toInt()
                                 if (sx == 0 && sy == 0) return@detectDragGesturesAfterLongPress
 
-                                val maxRow = (localTiles.size - 1) / columns
-                                val toCol  = (from % columns + sx).coerceIn(0, columns - 1)
-                                val toRow  = (from / columns + sy).coerceIn(0, maxRow)
-                                val to     = (toRow * columns + toCol).coerceIn(0, localTiles.size - 1)
+                                val positions = gridPositions(localTiles, columns)
+                                val (fromRow, fromCol) = positions[from]
+                                val targetRow = fromRow + sy
+                                val targetCol = (fromCol + sx).coerceIn(0, columns - 1)
+                                val to = positions.indices.minByOrNull { i ->
+                                    val (r, c) = positions[i]
+                                    val dr = r - targetRow; val dc = c - targetCol
+                                    dr * dr + dc * dc
+                                } ?: from
 
                                 if (to != from) {
                                     localTiles.add(to, localTiles.removeAt(from))
@@ -290,7 +308,11 @@ private fun TileGrid(
                                 draggingKey = null
                                 onSaveOrder?.invoke(localTiles.toList())
                             },
-                            onDragCancel = { draggingKey = null },
+                            onDragCancel = {
+                                draggingKey = null
+                                localTiles.clear()
+                                localTiles.addAll(tiles)
+                            },
                         )
                     }
                 } else {

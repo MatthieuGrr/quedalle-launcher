@@ -23,10 +23,11 @@ class LauncherNotificationListener : NotificationListenerService() {
     override fun onNotificationRemoved(sbn: StatusBarNotification) = sync()
 
     private fun sync() {
-        _notifiedPackages.value = try {
+        val updated = try {
             activeNotifications?.map { it.packageName }?.toSet() ?: emptySet()
         } catch (_: Exception) {
-            emptySet()
+            return
         }
+        _notifiedPackages.value = updated
     }
 }

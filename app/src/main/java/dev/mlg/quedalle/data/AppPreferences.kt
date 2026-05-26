@@ -47,7 +47,7 @@ class AppPreferences(private val context: Context) {
             val current = currentDefs(prefs)
             val exists  = current.any { it.type == "app" && it.pkg == packageName }
             prefs[KEY_TILES] = (
-                if (exists) current.filter { it.id != packageName }
+                if (exists) current.filter { !(it.type == "app" && it.pkg == packageName) }
                 else current + TileDef("app", packageName, pkg = packageName)
             ).toJson()
         }

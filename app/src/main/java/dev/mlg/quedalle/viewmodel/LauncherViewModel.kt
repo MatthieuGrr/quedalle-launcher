@@ -1,9 +1,13 @@
 package dev.mlg.quedalle.viewmodel
 
 import android.app.Application
+import android.content.BroadcastReceiver
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -40,8 +44,32 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
     private val _allApps        = MutableStateFlow<List<AppInfo>>(emptyList())
     private val _hasNotifAccess = MutableStateFlow(isNotificationServiceEnabled())
 
+    private val packageReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            viewModelScope.launch(Dispatchers.IO) { _allApps.value = repo.getInstalledApps() }
+        }
+    }
+
     init {
         viewModelScope.launch(Dispatchers.IO) { _allApps.value = repo.getInstalledApps() }
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_PACKAGE_ADDED)
+            addAction(Intent.ACTION_PACKAGE_REMOVED)
+            addAction(Intent.ACTION_PACKAGE_REPLACED)
+            addAction(Intent.ACTION_PACKAGE_CHANGED)
+            addDataScheme("package")
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            app.registerReceiver(packageReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            app.registerReceiver(packageReceiver, filter)
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        getApplication<Application>().unregisterReceiver(packageReceiver)
     }
 
     private val gridConfig: Flow<GridConfig> = combine(
@@ -98,7 +126,7 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = LauncherUiState(),
+        initialValue = LauncherUiState(hasNotificationAccess = isNotificationServiceEnabled()),
     )
 
     // ── Search ───────────────────────────────────────────────────────────────
@@ -111,32 +139,28 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     // ── Tiles ────────────────────────────────────────────────────────────────
-    fun togglePin(packageName: String) { viewModelScope.launch { prefs.togglePin(packageName) } }
+    fun togglePin(packageName: String) { launchPrefs { prefs.togglePin(packageName) } }
 
     fun saveTileOrder(tiles: List<TileItem>) {
-        viewModelScope.launch { prefs.saveTiles(tiles.map { it.toDef() }) }
+        launchPrefs { prefs.saveTiles(tiles.map { it.toDef() }) }
     }
 
     fun addSpacer(color: Int) {
-        viewModelScope.launch {
-            prefs.addTile(TileDef("spacer", "sp_${UUID.randomUUID()}", color = color))
-        }
+        launchPrefs { prefs.addTile(TileDef("spacer", "sp_${UUID.randomUUID()}", color = color)) }
     }
 
     fun addDivider(color: Int) {
-        viewModelScope.launch {
-            prefs.addTile(TileDef("divider", "dv_${UUID.randomUUID()}", color = color))
-        }
+        launchPrefs { prefs.addTile(TileDef("divider", "dv_${UUID.randomUUID()}", color = color)) }
     }
 
     fun updateDivider(id: String, color: Int) {
-        viewModelScope.launch { prefs.updateTile(TileDef("divider", id, color = color)) }
+        launchPrefs { prefs.updateTile(TileDef("divider", id, color = color)) }
     }
 
-    fun removeTile(id: String) { viewModelScope.launch { prefs.removeTile(id) } }
+    fun removeTile(id: String) { launchPrefs { prefs.removeTile(id) } }
 
     fun updateSpacer(id: String, color: Int) {
-        viewModelScope.launch { prefs.updateTile(TileDef("spacer", id, color = color)) }
+        launchPrefs { prefs.updateTile(TileDef("spacer", id, color = color)) }
     }
 
     // ── App actions ──────────────────────────────────────────────────────────
@@ -162,8 +186,8 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun refreshNotificationAccess() { _hasNotifAccess.value = isNotificationServiceEnabled() }
-    fun setGridColumns(columns: Int) { viewModelScope.launch { prefs.setGridColumns(columns) } }
-    fun setGridRows(rows: Int)       { viewModelScope.launch { prefs.setGridRows(rows) } }
+    fun setGridColumns(columns: Int) { launchPrefs { prefs.setGridColumns(columns) } }
+    fun setGridRows(rows: Int)       { launchPrefs { prefs.setGridRows(rows) } }
 
     private fun isNotificationServiceEnabled(): Boolean {
         val flat = Settings.Secure.getString(
@@ -172,6 +196,10 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
         ) ?: return false
         val cn = ComponentName(getApplication(), LauncherNotificationListener::class.java).flattenToString()
         return flat.contains(cn)
+    }
+
+    private fun launchPrefs(block: suspend () -> Unit) {
+        viewModelScope.launch { runCatching { block() } }
     }
 }
 
