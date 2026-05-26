@@ -1,0 +1,1 @@
+Removed unnecessary QUERY_ALL_PACKAGES permission — the existing queries declaration is sufficient for a launcher.

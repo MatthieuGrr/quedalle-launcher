@@ -1,1 +1,1 @@
-L'APK debug est désormais inclus dans les releases GitHub aux côtés de l'APK release non signé.
+Améliorations internes du code et mise à jour de la description de l'application.

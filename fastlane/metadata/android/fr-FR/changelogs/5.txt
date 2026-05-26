@@ -1,0 +1,1 @@
+Suppression de la permission QUERY_ALL_PACKAGES — la déclaration queries existante est suffisante pour un launcher.
