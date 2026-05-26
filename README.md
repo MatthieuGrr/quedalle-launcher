@@ -16,7 +16,9 @@ A minimal, tile-based Android home screen launcher built with Jetpack Compose.
 
 ## Screenshots
 
-*Coming soon*
+| EN | FR |
+|---|---|
+| ![English screenshot](fastlane/metadata/android/en-US/phoneScreenshots/Screenshot_en-US.png) | ![French screenshot](fastlane/metadata/android/fr-FR/phoneScreenshots/Screenshot_fr-FR.png) |
 
 ## Requirements
 
