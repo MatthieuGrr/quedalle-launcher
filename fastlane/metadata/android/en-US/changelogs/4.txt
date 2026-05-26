@@ -1,0 +1,1 @@
+Debug APK now included in GitHub releases alongside the unsigned release APK.
