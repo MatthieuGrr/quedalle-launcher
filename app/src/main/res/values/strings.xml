@@ -1,5 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Quedalle</string>
-    <string name="notification_access_label">Accès aux notifications</string>
+    <string name="notification_access_label">Notification access</string>
+    <string name="search_placeholder">Search…</string>
+    <string name="action_pin">Pin</string>
+    <string name="action_unpin">Unpin</string>
+    <string name="action_reorder">Reorder grid</string>
+    <string name="action_app_info">App info</string>
+    <string name="dialog_spacer_title">Spacer tile</string>
+    <string name="dialog_divider_title">Divider</string>
+    <string name="action_remove">Remove</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="notification_banner_text">Enable notification access → active colors</string>
+    <string name="action_add_spacer">+ Spacer</string>
+    <string name="action_add_divider">+ Divider</string>
+    <string name="action_done">Done</string>
+    <string name="label_columns">Col</string>
+    <string name="label_rows">Row</string>
+    <string name="empty_search">No results</string>
+    <string name="empty_hint">Long-press an app to pin it</string>
 </resources>

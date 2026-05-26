@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Quedalle</string>
+    <string name="notification_access_label">Accès aux notifications</string>
+    <string name="search_placeholder">Rechercher…</string>
+    <string name="action_pin">Épingler</string>
+    <string name="action_unpin">Désépingler</string>
+    <string name="action_reorder">Réorganiser la grille</string>
+    <string name="action_app_info">Infos de l\'application</string>
+    <string name="dialog_spacer_title">Tuile vide</string>
+    <string name="dialog_divider_title">Séparateur</string>
+    <string name="action_remove">Supprimer</string>
+    <string name="action_confirm">Valider</string>
+    <string name="action_cancel">Annuler</string>
+    <string name="notification_banner_text">Activer l\'accès aux notifications → couleurs actives</string>
+    <string name="action_add_spacer">+ Vide</string>
+    <string name="action_add_divider">+ Sépar.</string>
+    <string name="action_done">Terminé</string>
+    <string name="label_columns">Col</string>
+    <string name="label_rows">Lig</string>
+    <string name="empty_search">Aucun résultat</string>
+    <string name="empty_hint">Appui long sur une app pour l\'épingler</string>
+</resources>

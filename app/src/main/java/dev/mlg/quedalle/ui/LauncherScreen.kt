@@ -29,6 +29,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
+import dev.mlg.quedalle.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -473,7 +475,7 @@ private fun SearchField(
         value = query,
         onValueChange = onQueryChange,
         modifier = modifier.onFocusChanged { onFocusChange(it.isFocused) },
-        placeholder = { Text("Rechercher…", color = Color(0xFF555555), fontSize = 14.sp) },
+        placeholder = { Text(stringResource(R.string.search_placeholder), color = Color(0xFF555555), fontSize = 14.sp) },
         leadingIcon = {
             Icon(Icons.Default.Search, contentDescription = null,
                 tint = Color(0xFF555555), modifier = Modifier.size(18.dp))
@@ -516,9 +518,9 @@ private fun AppOptionsDialog(
         },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                DialogOption(if (app.isPinned) "Désépingler" else "Épingler", onTogglePin)
-                if (app.isPinned) DialogOption("Réorganiser la grille", onReorder)
-                DialogOption("Infos de l'application", onAppInfo)
+                DialogOption(stringResource(if (app.isPinned) R.string.action_unpin else R.string.action_pin), onTogglePin)
+                if (app.isPinned) DialogOption(stringResource(R.string.action_reorder), onReorder)
+                DialogOption(stringResource(R.string.action_app_info), onAppInfo)
             }
         },
         confirmButton = {},
@@ -538,21 +540,21 @@ private fun SpacerDialog(
     var selected by remember { mutableStateOf(initial) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Tuile vide", color = Color.White) },
+        title = { Text(stringResource(R.string.dialog_spacer_title), color = Color.White) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 ColorPicker(selected) { selected = it }
                 if (onRemove != null) {
                     TextButton(onClick = onRemove, modifier = Modifier.fillMaxWidth(),
                         contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)) {
-                        Text("Supprimer", color = Color(0xFFCC4444), fontSize = 13.sp,
+                        Text(stringResource(R.string.action_remove), color = Color(0xFFCC4444), fontSize = 13.sp,
                             modifier = Modifier.fillMaxWidth())
                     }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onConfirm(selected) }) { Text("Valider") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Annuler") } },
+        confirmButton = { TextButton(onClick = { onConfirm(selected) }) { Text(stringResource(R.string.action_confirm)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
         containerColor = Color(0xFF161616),
         shape = RoundedCornerShape(16.dp),
     )
@@ -568,21 +570,21 @@ private fun DividerDialog(
     var selected by remember { mutableStateOf(initial) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Séparateur", color = Color.White) },
+        title = { Text(stringResource(R.string.dialog_divider_title), color = Color.White) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 ColorPicker(selected) { selected = it }
                 if (onRemove != null) {
                     TextButton(onClick = onRemove, modifier = Modifier.fillMaxWidth(),
                         contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)) {
-                        Text("Supprimer", color = Color(0xFFCC4444), fontSize = 13.sp,
+                        Text(stringResource(R.string.action_remove), color = Color(0xFFCC4444), fontSize = 13.sp,
                             modifier = Modifier.fillMaxWidth())
                     }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onConfirm(selected) }) { Text("Valider") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Annuler") } },
+        confirmButton = { TextButton(onClick = { onConfirm(selected) }) { Text(stringResource(R.string.action_confirm)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
         containerColor = Color(0xFF161616),
         shape = RoundedCornerShape(16.dp),
     )
@@ -610,7 +612,7 @@ private fun NotificationBanner(onClick: () -> Unit, modifier: Modifier = Modifie
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "Activer l'accès aux notifications → couleurs actives",
+            text = stringResource(R.string.notification_banner_text),
             color = Color(0xFFBBAA00), fontSize = 11.sp,
             modifier = Modifier.weight(1f),
         )
@@ -643,17 +645,17 @@ private fun EditToolbar(
             TextButton(
                 onClick = onAddSpacer,
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-            ) { Text("+ Vide", fontSize = 12.sp) }
+            ) { Text(stringResource(R.string.action_add_spacer), fontSize = 12.sp) }
 
             TextButton(
                 onClick = onAddDivider,
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-            ) { Text("+ Sépar.", fontSize = 12.sp) }
+            ) { Text(stringResource(R.string.action_add_divider), fontSize = 12.sp) }
 
             Spacer(Modifier.weight(1f))
 
             TextButton(onClick = onDone) {
-                Text("Terminé", color = MaterialTheme.colorScheme.primary,
+                Text(stringResource(R.string.action_done), color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium, fontSize = 13.sp)
             }
         }
@@ -666,8 +668,8 @@ private fun EditToolbar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            StepControl("Col", columns, 2, 5,  { onColumnsChange(columns - 1) }, { onColumnsChange(columns + 1) })
-            StepControl("Lig", rows,    1, 20, { onRowsChange(rows - 1) },       { onRowsChange(rows + 1) })
+            StepControl(stringResource(R.string.label_columns), columns, 2, 5,  { onColumnsChange(columns - 1) }, { onColumnsChange(columns + 1) })
+            StepControl(stringResource(R.string.label_rows),    rows,    1, 20, { onRowsChange(rows - 1) },       { onRowsChange(rows + 1) })
         }
     }
 }
@@ -697,7 +699,7 @@ private fun StepControl(
 private fun EmptyHint(isSearching: Boolean, modifier: Modifier = Modifier) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Text(
-            text = if (isSearching) "Aucun résultat" else "Appui long sur une app pour l'épingler",
+            text = stringResource(if (isSearching) R.string.empty_search else R.string.empty_hint),
             color = Color(0xFF333333), fontSize = 13.sp, textAlign = TextAlign.Center,
         )
     }

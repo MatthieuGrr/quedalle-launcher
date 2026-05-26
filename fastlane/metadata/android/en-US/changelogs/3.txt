@@ -1,0 +1,1 @@
+UI now adapts to system language (English and French supported).
