@@ -4,12 +4,6 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Tag name (ex: v1.0)'
-        required: true
-        default: 'v1.0'
 
 jobs:
   release:
@@ -28,9 +22,11 @@ jobs:
       - name: Build APK
         run: ./gradlew assembleDebug
 
-      - name: Upload release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
-          name: Quedalle ${{ github.event.inputs.tag || github.ref_name }}
-          files: app/build/outputs/apk/debug/app-debug.apk
+      - name: Create GitHub Release
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "Quedalle $GITHUB_REF_NAME" \
+            --generate-notes \
+            app/build/outputs/apk/debug/app-debug.apk
+        env:
+          GH_TOKEN: ${{ github.token }}
