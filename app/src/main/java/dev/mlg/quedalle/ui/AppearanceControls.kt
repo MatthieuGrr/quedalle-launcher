@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -85,15 +86,17 @@ fun AppearanceControls(
 
         if (showTextSection) {
             SectionLabel(stringResource(R.string.appearance_text))
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                AutoSwatch(selected = textColor == null) { onTextColor(null); customSlot = null }
-                TextSwatches.take(4).forEach { c ->
-                    ColorSwatch(c, textColor ?: 1, onSelect = { onTextColor(it); customSlot = null })
-                }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                TextSwatches.drop(4).forEach { c ->
-                    ColorSwatch(c, textColor ?: 1, onSelect = { onTextColor(it); customSlot = null })
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                AutoSwatch(
+                    selected = textColor == null,
+                    modifier = Modifier.weight(1f),
+                ) { onTextColor(null); customSlot = null }
+                TextSwatches.forEach { c ->
+                    ColorSwatch(c, textColor ?: 1, Modifier.weight(1f),
+                        onSelect = { onTextColor(it); customSlot = null })
                 }
             }
             CustomColorToggle(
@@ -149,27 +152,38 @@ internal fun SectionLabel(text: String) {
 
 @Composable
 internal fun ColorPicker(selected: Int, onSelect: (Int) -> Unit) {
+    // Transparent + theme + 12 presets = 14 swatches spread over two
+    // full-width rows so they fill the sheet instead of piling up left.
+    val all = listOf(QuedalleColors.TileTransparent, QuedalleColors.TileAppColor) + QuedalleColors.TilePresets
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            ColorSwatch(QuedalleColors.TileTransparent, selected, onSelect, transparent = true)
-            ColorSwatch(QuedalleColors.TileAppColor, selected, onSelect)
-        }
-        QuedalleColors.TilePresets.chunked(4).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                row.forEach { color -> ColorSwatch(color, selected, onSelect) }
+        all.chunked(7).forEach { row ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                row.forEach { color ->
+                    ColorSwatch(color, selected, Modifier.weight(1f), onSelect,
+                        transparent = color == QuedalleColors.TileTransparent)
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ColorSwatch(color: Int, selected: Int, onSelect: (Int) -> Unit, transparent: Boolean = false) {
+private fun ColorSwatch(
+    color: Int,
+    selected: Int,
+    modifier: Modifier = Modifier,
+    onSelect: (Int) -> Unit,
+    transparent: Boolean = false,
+) {
     val palette = LocalQuedallePalette.current
     val shape = RoundedCornerShape(8.dp)
     val fill = resolveTileColor(color)
     Box(
-        modifier = Modifier
-            .size(38.dp)
+        modifier = modifier
+            .aspectRatio(1f)
             .clip(shape)
             .then(
                 if (transparent) Modifier.drawBehind {
@@ -191,12 +205,12 @@ private fun ColorSwatch(color: Int, selected: Int, onSelect: (Int) -> Unit, tran
 }
 
 @Composable
-private fun AutoSwatch(selected: Boolean, onSelect: () -> Unit) {
+private fun AutoSwatch(selected: Boolean, modifier: Modifier = Modifier, onSelect: () -> Unit) {
     val palette = LocalQuedallePalette.current
     val shape = RoundedCornerShape(8.dp)
     Box(
-        modifier = Modifier
-            .size(38.dp)
+        modifier = modifier
+            .aspectRatio(1f)
             .clip(shape)
             .background(palette.card)
             .then(if (selected) Modifier.border(2.dp, palette.textStrong, shape) else Modifier)
@@ -211,13 +225,20 @@ private fun AutoSwatch(selected: Boolean, onSelect: () -> Unit) {
 private fun TextureRow(selected: String?, base: Color, onSelect: (String?) -> Unit) {
     val palette = LocalQuedallePalette.current
     val shape = RoundedCornerShape(8.dp)
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
         Textures.all.forEach { tex ->
             val brush = Textures.brush(tex, base)
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.weight(1f),
+            ) {
                 Box(
                     modifier = Modifier
-                        .size(width = 52.dp, height = 34.dp)
+                        .fillMaxWidth()
+                        .aspectRatio(1.6f)
                         .clip(shape)
                         .then(if (brush != null) Modifier.background(brush) else Modifier.background(base))
                         .then(if (tex == selected) Modifier.border(2.dp, palette.textStrong, shape) else Modifier)
