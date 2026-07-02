@@ -1,5 +1,4 @@
-• Un seul panneau à l'appui long : aperçu éditable (le nom se tape sur la tuile), couleurs, texture et actions, appliqués en direct
+• Un seul panneau à l'appui long : aperçu live, le crayon déplie l'édition du nom et du style (le nom se tape sur la tuile), puis actions de la tuile et entrées globales (grille, réglages)
 • Style global des tuiles dans Réglages : toute la grille d'un coup
-• Appui long sur le vide : édition de grille et réglages
 • Glisser-déposer fluide — la tuile suit le doigt
 • Textures (irisé, dégradé, verre), sliders HSL, contraste auto

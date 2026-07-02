@@ -32,7 +32,8 @@
     <string name="label_columns">Columns</string>
     <string name="label_rows">Rows</string>
     <string name="empty_search">No results</string>
-    <string name="empty_hint">Long-press an app to pin it\nLong-press empty space for grid &amp; settings</string>
+    <string name="empty_hint">Long-press an app to pin it</string>
+    <string name="action_edit_style">Edit name &amp; colors</string>
     <string name="msg_grid_full">Grid is full — remove a tile or enlarge the grid</string>
     <string name="msg_export_success">Layout exported</string>
     <string name="msg_export_failed">Export failed</string>

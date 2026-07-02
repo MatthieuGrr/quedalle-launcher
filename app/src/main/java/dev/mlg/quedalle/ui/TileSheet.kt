@@ -5,8 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -14,12 +14,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,6 +51,7 @@ import dev.mlg.quedalle.R
 import dev.mlg.quedalle.model.TEXTURE_NONE
 import dev.mlg.quedalle.model.TEXT_COLOR_AUTO
 import dev.mlg.quedalle.model.TileItem
+import dev.mlg.quedalle.model.TileStyle
 import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
 import dev.mlg.quedalle.ui.theme.QuedalleColors
 import dev.mlg.quedalle.ui.theme.Textures
@@ -53,8 +60,10 @@ import dev.mlg.quedalle.ui.theme.resolveTileTextColor
 import dev.mlg.quedalle.viewmodel.LauncherViewModel
 
 /**
- * The single long-press editor: everything about a tile lives here and
- * every change applies immediately to the real grid behind the sheet.
+ * The single long-press sheet: a live preview of the tile with a pencil
+ * that unfolds name & style editing, then the tile's actions, then the
+ * launcher-wide entries (grid editing, settings). Everything applies
+ * immediately.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,6 +71,7 @@ fun TileSheet(
     tile: TileItem,
     vm: LauncherViewModel,
     onEnterEdit: () -> Unit,
+    onOpenSettings: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val palette = LocalQuedallePalette.current
@@ -80,15 +90,20 @@ fun TileSheet(
                 .nestedScroll(BlockUpwardOverscroll)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
-                .padding(bottom = 20.dp)
+                .padding(bottom = 16.dp)
                 .navigationBarsPadding(),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             when (tile) {
-                is TileItem.App     -> AppSheetContent(tile, vm, onEnterEdit, onDismiss)
+                is TileItem.App     -> AppSheetContent(tile, vm, onDismiss)
                 is TileItem.Spacer  -> SpacerSheetContent(tile, vm, onDismiss)
                 is TileItem.Divider -> DividerSheetContent(tile, vm, onDismiss)
             }
+
+            // ── Launcher-wide entries ─────────────────────────────────────────
+            HorizontalDivider(color = palette.borderIdle)
+            SheetOption(stringResource(R.string.action_reorder)) { onEnterEdit() }
+            SheetOption(stringResource(R.string.action_settings)) { onOpenSettings() }
         }
     }
 }
@@ -97,30 +112,23 @@ fun TileSheet(
 private fun AppSheetContent(
     tile: TileItem.App,
     vm: LauncherViewModel,
-    onEnterEdit: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val palette = LocalQuedallePalette.current
     val app = tile.info
 
     if (app.isPinned) {
-        // Live preview of the tile; the name is edited directly on it and
-        // any style change below is reflected here immediately.
+        var editing by remember(tile.id) { mutableStateOf(false) }
         var name by remember(tile.id) { mutableStateOf(app.customLabel ?: app.label) }
-        val previewBg = resolveTileColor(tile.style.background ?: QuedalleColors.TileAppColor)
-        val previewBrush = Textures.brush(tile.style.texture, previewBg)
-        val previewText = resolveTileTextColor(tile.style, previewBg)
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            Box(
-                modifier = Modifier
-                    .size(width = 148.dp, height = 72.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .then(
-                        if (previewBrush != null) Modifier.background(previewBrush)
-                        else Modifier.background(previewBg)
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
+
+        TilePreviewCard(
+            background = tile.style.background ?: QuedalleColors.TileAppColor,
+            textColor = tile.style.textColor,
+            texture = tile.style.texture,
+            editing = editing,
+            onToggleEditing = { editing = !editing },
+        ) { previewText ->
+            if (editing) {
                 BasicTextField(
                     value = name,
                     onValueChange = {
@@ -149,7 +157,19 @@ private fun AppSheetContent(
                             innerTextField()
                         }
                     },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                )
+            } else {
+                Text(
+                    text = if (name.isBlank()) app.label else name,
+                    color = previewText,
+                    fontSize = 12.sp,
+                    lineHeight = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 24.dp),
                 )
             }
         }
@@ -159,47 +179,38 @@ private fun AppSheetContent(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        AppearanceControls(
-            background = tile.style.background ?: QuedalleColors.TileAppColor,
-            textColor = tile.style.textColor,
-            texture = tile.style.texture,
-            showTextSection = true,
-            onBackground = { vm.setTileBackground(tile.id, it) },
-            onTextColor = { vm.setTileTextColor(tile.id, it ?: TEXT_COLOR_AUTO) },
-            onTexture = { vm.setTileTexture(tile.id, it ?: TEXTURE_NONE) },
-        )
-
-        TextButton(
-            onClick = { vm.resetTileStyle(tile.id) },
-            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
-        ) { Text(stringResource(R.string.action_reset), fontSize = 12.sp) }
-
-        HorizontalDivider(color = palette.borderIdle)
+        if (editing) {
+            AppearanceControls(
+                background = tile.style.background ?: QuedalleColors.TileAppColor,
+                textColor = tile.style.textColor,
+                texture = tile.style.texture,
+                showTextSection = true,
+                onBackground = { vm.setTileBackground(tile.id, it) },
+                onTextColor = { vm.setTileTextColor(tile.id, it ?: TEXT_COLOR_AUTO) },
+                onTexture = { vm.setTileTexture(tile.id, it ?: TEXTURE_NONE) },
+            )
+            TextButton(
+                onClick = { vm.resetTileStyle(tile.id); name = app.label },
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
+            ) { Text(stringResource(R.string.action_reset), fontSize = 12.sp) }
+        }
     } else {
         Text(app.displayLabel, color = palette.textStrong, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
         Text(app.packageName, color = palette.textMuted, fontSize = 10.sp)
     }
 
-    // ── Actions ───────────────────────────────────────────────────────────────
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        SheetAction(stringResource(if (app.isPinned) R.string.action_unpin else R.string.action_pin)) {
-            vm.togglePin(app); onDismiss()
-        }
-        if (app.isPinned) {
-            SheetAction(stringResource(R.string.action_reorder)) { onEnterEdit() }
-        } else {
-            SheetAction(stringResource(R.string.action_hide)) { vm.hideApp(app); onDismiss() }
-        }
-        SheetAction(stringResource(R.string.action_app_info)) { vm.openAppInfo(app); onDismiss() }
+    // ── Tile actions ──────────────────────────────────────────────────────────
+    HorizontalDivider(color = palette.borderIdle)
+    SheetOption(stringResource(if (app.isPinned) R.string.action_unpin else R.string.action_pin)) {
+        vm.togglePin(app); onDismiss()
     }
+    if (!app.isPinned) {
+        SheetOption(stringResource(R.string.action_hide)) { vm.hideApp(app); onDismiss() }
+    }
+    SheetOption(stringResource(R.string.action_app_info)) { vm.openAppInfo(app); onDismiss() }
     if (!app.isSystemApp) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            SheetAction(stringResource(R.string.action_uninstall), color = palette.danger) {
-                vm.requestUninstall(app); onDismiss()
-            }
+        SheetOption(stringResource(R.string.action_uninstall), color = palette.danger) {
+            vm.requestUninstall(app); onDismiss()
         }
     }
 }
@@ -211,24 +222,31 @@ private fun SpacerSheetContent(
     onDismiss: () -> Unit,
 ) {
     val palette = LocalQuedallePalette.current
-    Text(stringResource(R.string.dialog_spacer_title), color = palette.textStrong,
-        fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+    var editing by remember(tile.id) { mutableStateOf(false) }
 
-    AppearanceControls(
+    TilePreviewCard(
         background = tile.color,
         textColor = null,
         texture = tile.texture,
-        showTextSection = false,
-        onBackground = { vm.setTileBackground(tile.id, it) },
-        onTextColor = {},
-        onTexture = { vm.setTileTexture(tile.id, it ?: TEXTURE_NONE) },
-    )
+        editing = editing,
+        onToggleEditing = { editing = !editing },
+    ) { }
+
+    if (editing) {
+        AppearanceControls(
+            background = tile.color,
+            textColor = null,
+            texture = tile.texture,
+            showTextSection = false,
+            onBackground = { vm.setTileBackground(tile.id, it) },
+            onTextColor = {},
+            onTexture = { vm.setTileTexture(tile.id, it ?: TEXTURE_NONE) },
+        )
+    }
 
     HorizontalDivider(color = palette.borderIdle)
-    Row(modifier = Modifier.fillMaxWidth()) {
-        SheetAction(stringResource(R.string.action_remove), color = palette.danger) {
-            vm.removeTile(tile.id); onDismiss()
-        }
+    SheetOption(stringResource(R.string.action_remove), color = palette.danger) {
+        vm.removeTile(tile.id); onDismiss()
     }
 }
 
@@ -245,10 +263,64 @@ private fun DividerSheetContent(
     ColorPicker(tile.color) { vm.setTileBackground(tile.id, it) }
 
     HorizontalDivider(color = palette.borderIdle)
-    Row(modifier = Modifier.fillMaxWidth()) {
-        SheetAction(stringResource(R.string.action_remove), color = palette.danger) {
-            vm.removeTile(tile.id); onDismiss()
+    SheetOption(stringResource(R.string.action_remove), color = palette.danger) {
+        vm.removeTile(tile.id); onDismiss()
+    }
+}
+
+/** The live tile preview with the pencil toggle in its corner. */
+@Composable
+private fun TilePreviewCard(
+    background: Int,
+    textColor: Int?,
+    texture: String?,
+    editing: Boolean,
+    onToggleEditing: () -> Unit,
+    content: @Composable (previewText: Color) -> Unit,
+) {
+    val base = resolveTileColor(background)
+    val brush = Textures.brush(texture, base)
+    val previewText = resolveTileTextColor(TileStyle(background, textColor, texture), base)
+    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier
+                .size(width = 168.dp, height = 84.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .then(if (brush != null) Modifier.background(brush) else Modifier.background(base)),
+            contentAlignment = Alignment.Center,
+        ) {
+            content(previewText)
+
+            IconButton(
+                onClick = onToggleEditing,
+                modifier = Modifier.align(Alignment.TopEnd).size(32.dp),
+            ) {
+                Icon(
+                    Icons.Filled.Edit,
+                    contentDescription = stringResource(R.string.action_edit_style),
+                    tint = if (editing) MaterialTheme.colorScheme.primary
+                           else previewText.copy(alpha = 0.75f),
+                    modifier = Modifier.size(14.dp),
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun SheetOption(label: String, color: Color = Color.Unspecified, onClick: () -> Unit) {
+    val palette = LocalQuedallePalette.current
+    TextButton(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth().height(40.dp),
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+    ) {
+        Text(
+            label,
+            color = if (color == Color.Unspecified) palette.textPrimary else color,
+            fontSize = 14.sp,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 
@@ -259,58 +331,4 @@ private object BlockUpwardOverscroll : NestedScrollConnection {
 
     override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity =
         if (available.y < 0f) available.copy(x = 0f) else Velocity.Zero
-}
-
-@Composable
-private fun SheetAction(label: String, color: Color = Color.Unspecified, onClick: () -> Unit) {
-    val palette = LocalQuedallePalette.current
-    TextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)) {
-        Text(
-            label,
-            color = if (color == Color.Unspecified) palette.textPrimary else color,
-            fontSize = 13.sp,
-        )
-    }
-}
-
-/**
- * Home menu, opened by long-pressing empty space on the home screen.
- * Grid editing and settings are both top-level from here.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun HomeSheet(
-    onReorder: () -> Unit,
-    onSettings: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val palette = LocalQuedallePalette.current
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = palette.surface,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 16.dp)
-                .navigationBarsPadding(),
-        ) {
-            HomeSheetOption(stringResource(R.string.action_reorder), onReorder)
-            HomeSheetOption(stringResource(R.string.action_settings), onSettings)
-        }
-    }
-}
-
-@Composable
-private fun HomeSheetOption(label: String, onClick: () -> Unit) {
-    val palette = LocalQuedallePalette.current
-    TextButton(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
-    ) {
-        Text(label, color = palette.textPrimary, fontSize = 14.sp, modifier = Modifier.fillMaxWidth())
-    }
 }
