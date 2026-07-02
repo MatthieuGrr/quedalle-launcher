@@ -94,14 +94,30 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
         searchState,
         gridConfig,
     ) { apps, tileDefs, hidden, search, config ->
-        val appMap     = apps.associateBy { it.key }
-        val pinnedKeys = tileDefs.filter { it.type == TYPE_APP }.map { it.id }.toSet()
+        val appMap  = apps.associateBy { it.key }
+        val appDefs = tileDefs.filter { it.type == TYPE_APP }.associateBy { it.id }
 
         val displayedTiles = if (search.isActive) {
+            // Pinned apps keep their real style and custom label in results,
+            // so the tile sheet previews (and edits) what actually exists.
             apps.filter { it.key !in hidden }
-                .mapNotNull { app -> searchRank(app.label, search.query)?.let { rank -> rank to app } }
+                .mapNotNull { app ->
+                    val def = appDefs[app.key]
+                    val rank = listOfNotNull(
+                        searchRank(app.label, search.query),
+                        def?.label?.let { searchRank(it, search.query) },
+                    ).minOrNull()
+                    rank?.let { Triple(it, app, def) }
+                }
                 .sortedBy { it.first }
-                .map { (_, app) -> TileItem.App(app.copy(isPinned = app.key in pinnedKeys)) }
+                .map { (_, app, def) ->
+                    val override = TileStyle(def?.color, def?.textColor, def?.texture)
+                    TileItem.App(
+                        info = app.copy(isPinned = def != null, customLabel = def?.label),
+                        style = mergeTileStyle(override, config.globalStyle),
+                        override = override,
+                    )
+                }
         } else {
             tileDefs.mapNotNull { def ->
                 when (def.type) {
