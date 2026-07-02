@@ -69,6 +69,7 @@ class TileCodecTest {
     fun `backup round trip`() {
         val backup = LayoutBackup(
             columns = 4, rows = 6, swipeDownNotifications = false,
+            theme = "light",
             hidden = listOf("com.hidden"),
             tiles = listOf(TileDef(TYPE_APP, "com.a", pkg = "com.a")),
         )

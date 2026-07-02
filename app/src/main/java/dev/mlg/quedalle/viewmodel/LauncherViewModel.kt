@@ -13,6 +13,7 @@ import dev.mlg.quedalle.data.TYPE_DIVIDER
 import dev.mlg.quedalle.data.TYPE_SPACER
 import dev.mlg.quedalle.data.TileDef
 import dev.mlg.quedalle.model.AppInfo
+import dev.mlg.quedalle.model.ThemeMode
 import dev.mlg.quedalle.model.TileItem
 import dev.mlg.quedalle.model.searchRank
 import kotlinx.coroutines.Dispatchers
@@ -57,6 +58,9 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _messages = MutableSharedFlow<UiMessage>(extraBufferCapacity = 8)
     val messages: SharedFlow<UiMessage> = _messages.asSharedFlow()
+
+    val themeMode: StateFlow<ThemeMode> = prefs.themeMode
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ThemeMode.SYSTEM)
 
     private val allApps: StateFlow<List<AppInfo>> = repo.apps
         .map { apps ->
@@ -173,6 +177,10 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
     // ── Settings ─────────────────────────────────────────────────────────────
     fun setSwipeDownNotifications(enabled: Boolean) {
         launchLogged { prefs.setSwipeDownNotifications(enabled) }
+    }
+
+    fun setThemeMode(mode: ThemeMode) {
+        launchLogged { prefs.setThemeMode(mode) }
     }
 
     fun exportTo(uri: Uri) {

@@ -31,6 +31,10 @@
     <string name="msg_import_success">Layout imported</string>
     <string name="msg_import_failed">Import failed — invalid file</string>
     <string name="settings_title">Settings</string>
+    <string name="settings_theme">Theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
     <string name="settings_swipe_down_title">Swipe down for notifications</string>
     <string name="settings_swipe_down_subtitle">Open the notification shade with a downward swipe on the home screen</string>
     <string name="settings_backup_title">Backup</string>

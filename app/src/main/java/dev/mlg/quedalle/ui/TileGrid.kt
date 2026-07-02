@@ -32,7 +32,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -44,10 +43,14 @@ import androidx.compose.ui.unit.sp
 import dev.mlg.quedalle.model.TileItem
 import dev.mlg.quedalle.model.fullRowFlags
 import dev.mlg.quedalle.model.gridPositions
-import dev.mlg.quedalle.ui.theme.QuedalleColors
+import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
+import dev.mlg.quedalle.ui.theme.resolveTileColor
 
 internal val GridPad   = 12.dp
 internal val GridSpace = 8.dp
+
+/** Height of a divider row — thin, but tall enough to long-press. */
+internal val DividerRowHeight = 16.dp
 
 @Composable
 fun TileGrid(
@@ -78,7 +81,11 @@ fun TileGrid(
 
         val cellWDp = (maxWidth - GridPad * 2 - GridSpace * (columns - 1)) / columns
         val cellHDp: Dp = if (rows != null) {
-            (maxHeight - GridSpace * (rows - 1)) / rows
+            // Dividers occupy their own thin rows: subtract their height (and
+            // row spacing) so the full-height tile rows exactly fill the rest.
+            val dividerCount = tiles.count { it is TileItem.Divider }
+            val totalRowGaps = GridSpace * (rows + dividerCount - 1).coerceAtLeast(0)
+            (maxHeight - DividerRowHeight * dividerCount - totalRowGaps) / rows
         } else {
             cellWDp / 1.4f
         }
@@ -176,12 +183,12 @@ private fun TileCard(tile: TileItem, isDragging: Boolean, height: Dp, modifier: 
 private fun DividerCard(tile: TileItem.Divider, isDragging: Boolean, modifier: Modifier) {
     val lineColor by animateColorAsState(
         targetValue = if (isDragging) MaterialTheme.colorScheme.secondaryContainer
-                      else Color(tile.color),
+                      else resolveTileColor(tile.color),
         animationSpec = tween(if (isDragging) 80 else 200),
         label = "div",
     )
     Box(
-        modifier = modifier.fillMaxWidth().height(12.dp),
+        modifier = modifier.fillMaxWidth().height(DividerRowHeight),
         contentAlignment = Alignment.Center,
     ) {
         Box(
@@ -196,15 +203,16 @@ private fun DividerCard(tile: TileItem.Divider, isDragging: Boolean, modifier: M
 
 @Composable
 private fun AppCard(tile: TileItem.App, isDragging: Boolean, height: Dp, modifier: Modifier) {
+    val palette = LocalQuedallePalette.current
     val bgColor by animateColorAsState(
         targetValue = if (isDragging) MaterialTheme.colorScheme.secondaryContainer
-                      else QuedalleColors.CardIdle,
+                      else palette.card,
         animationSpec = tween(if (isDragging) 80 else 350),
         label = "bg",
     )
     val textColor by animateColorAsState(
         targetValue = if (isDragging) MaterialTheme.colorScheme.onSecondaryContainer
-                      else QuedalleColors.TextPrimary,
+                      else palette.textPrimary,
         animationSpec = tween(if (isDragging) 80 else 350),
         label = "text",
     )
@@ -231,7 +239,7 @@ private fun AppCard(tile: TileItem.App, isDragging: Boolean, height: Dp, modifie
 private fun SpacerCard(tile: TileItem.Spacer, isDragging: Boolean, height: Dp, modifier: Modifier) {
     val bgColor by animateColorAsState(
         targetValue = if (isDragging) MaterialTheme.colorScheme.secondaryContainer
-                      else Color(tile.color),
+                      else resolveTileColor(tile.color),
         animationSpec = tween(if (isDragging) 80 else 200),
         label = "bg",
     )

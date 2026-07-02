@@ -31,6 +31,10 @@
     <string name="msg_import_success">Disposition importée</string>
     <string name="msg_import_failed">Échec de l\'import — fichier invalide</string>
     <string name="settings_title">Réglages</string>
+    <string name="settings_theme">Thème</string>
+    <string name="theme_system">Système</string>
+    <string name="theme_dark">Sombre</string>
+    <string name="theme_light">Clair</string>
     <string name="settings_swipe_down_title">Balayer vers le bas pour les notifications</string>
     <string name="settings_swipe_down_subtitle">Ouvrir le volet de notifications d\'un glissement vers le bas sur l\'écran d\'accueil</string>
     <string name="settings_backup_title">Sauvegarde</string>

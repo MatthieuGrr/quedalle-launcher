@@ -34,7 +34,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.mlg.quedalle.R
 import dev.mlg.quedalle.model.AppInfo
+import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
 import dev.mlg.quedalle.ui.theme.QuedalleColors
+import dev.mlg.quedalle.ui.theme.resolveTileColor
 
 @Composable
 fun AppOptionsDialog(
@@ -46,13 +48,15 @@ fun AppOptionsDialog(
     onHide: (() -> Unit)?,
     onUninstall: (() -> Unit)?,
     onAppInfo: () -> Unit,
+    onSettings: () -> Unit,
 ) {
+    val palette = LocalQuedallePalette.current
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Column {
                 Text(app.displayLabel, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-                Text(app.packageName, fontSize = 10.sp, color = QuedalleColors.TextMuted,
+                Text(app.packageName, fontSize = 10.sp, color = palette.textMuted,
                     modifier = Modifier.padding(top = 2.dp))
             }
         },
@@ -61,17 +65,18 @@ fun AppOptionsDialog(
                 DialogOption(stringResource(if (app.isPinned) R.string.action_unpin else R.string.action_pin), onTogglePin)
                 if (onRename != null) DialogOption(stringResource(R.string.action_rename), onRename)
                 if (onReorder != null) DialogOption(stringResource(R.string.action_reorder), onReorder)
+                DialogOption(stringResource(R.string.action_settings), onSettings)
                 if (onHide != null) DialogOption(stringResource(R.string.action_hide), onHide)
                 DialogOption(stringResource(R.string.action_app_info), onAppInfo)
                 if (onUninstall != null) {
                     DialogOption(stringResource(R.string.action_uninstall), onUninstall,
-                        color = QuedalleColors.Danger)
+                        color = palette.danger)
                 }
             }
         },
         confirmButton = {},
         dismissButton = {},
-        containerColor = QuedalleColors.Surface,
+        containerColor = palette.surface,
         shape = RoundedCornerShape(16.dp),
     )
 }
@@ -83,32 +88,33 @@ fun RenameDialog(
     onConfirm: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val palette = LocalQuedallePalette.current
     var value by remember { mutableStateOf(current) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.dialog_rename_title), color = Color.White, fontSize = 16.sp) },
+        title = { Text(stringResource(R.string.dialog_rename_title), color = palette.textStrong, fontSize = 16.sp) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = value,
                     onValueChange = { value = it },
                     singleLine = true,
-                    placeholder = { Text(original, color = QuedalleColors.TextMuted, fontSize = 14.sp) },
+                    placeholder = { Text(original, color = palette.textMuted, fontSize = 14.sp) },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor     = Color.White,
-                        unfocusedTextColor   = Color.White,
-                        focusedBorderColor   = QuedalleColors.BorderFocused,
-                        unfocusedBorderColor = QuedalleColors.BorderIdle,
-                        cursorColor          = Color.White,
+                        focusedTextColor     = palette.textStrong,
+                        unfocusedTextColor   = palette.textStrong,
+                        focusedBorderColor   = palette.borderFocused,
+                        unfocusedBorderColor = palette.borderIdle,
+                        cursorColor          = palette.textStrong,
                     ),
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Text(stringResource(R.string.rename_hint), color = QuedalleColors.TextMuted, fontSize = 11.sp)
+                Text(stringResource(R.string.rename_hint), color = palette.textMuted, fontSize = 11.sp)
             }
         },
         confirmButton = { TextButton(onClick = { onConfirm(value) }) { Text(stringResource(R.string.action_confirm)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
-        containerColor = QuedalleColors.Surface,
+        containerColor = palette.surface,
         shape = RoundedCornerShape(16.dp),
     )
 }
@@ -121,17 +127,18 @@ fun TileColorDialog(
     onRemove: (() -> Unit)?,
     onDismiss: () -> Unit,
 ) {
+    val palette = LocalQuedallePalette.current
     var selected by remember { mutableStateOf(initial) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(titleRes), color = Color.White) },
+        title = { Text(stringResource(titleRes), color = palette.textStrong) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 ColorPicker(selected) { selected = it }
                 if (onRemove != null) {
                     TextButton(onClick = onRemove, modifier = Modifier.fillMaxWidth(),
                         contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)) {
-                        Text(stringResource(R.string.action_remove), color = QuedalleColors.Danger, fontSize = 13.sp,
+                        Text(stringResource(R.string.action_remove), color = palette.danger, fontSize = 13.sp,
                             modifier = Modifier.fillMaxWidth())
                     }
                 }
@@ -139,7 +146,7 @@ fun TileColorDialog(
         },
         confirmButton = { TextButton(onClick = { onConfirm(selected) }) { Text(stringResource(R.string.action_confirm)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
-        containerColor = QuedalleColors.Surface,
+        containerColor = palette.surface,
         shape = RoundedCornerShape(16.dp),
     )
 }
@@ -161,7 +168,9 @@ private fun ColorPicker(selected: Int, onSelect: (Int) -> Unit) {
 
 @Composable
 private fun ColorSwatch(color: Int, selected: Int, onSelect: (Int) -> Unit, transparent: Boolean = false) {
+    val palette = LocalQuedallePalette.current
     val shape = RoundedCornerShape(8.dp)
+    val fill = resolveTileColor(color)
     Box(
         modifier = Modifier
             .size(38.dp)
@@ -170,15 +179,15 @@ private fun ColorSwatch(color: Int, selected: Int, onSelect: (Int) -> Unit, tran
                 if (transparent) Modifier.drawBehind {
                     val cell = size.width / 4
                     for (row in 0..3) for (col in 0..3) drawRect(
-                        color     = if ((row + col) % 2 == 0) QuedalleColors.CheckerDark else QuedalleColors.CheckerLight,
+                        color     = if ((row + col) % 2 == 0) palette.checkerA else palette.checkerB,
                         topLeft   = Offset(col * cell, row * cell),
                         size      = Size(cell, cell),
                     )
-                } else Modifier.background(Color(color))
+                } else Modifier.background(fill)
             )
             .then(
                 if (color == selected)
-                    Modifier.border(2.dp, Color.White, shape)
+                    Modifier.border(2.dp, palette.textStrong, shape)
                 else Modifier
             )
             .clickable { onSelect(color) }
@@ -186,12 +195,18 @@ private fun ColorSwatch(color: Int, selected: Int, onSelect: (Int) -> Unit, tran
 }
 
 @Composable
-internal fun DialogOption(label: String, onClick: () -> Unit, color: Color = Color.White) {
+internal fun DialogOption(label: String, onClick: () -> Unit, color: Color = Color.Unspecified) {
+    val palette = LocalQuedallePalette.current
     TextButton(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
     ) {
-        Text(label, color = color, fontSize = 13.sp, modifier = Modifier.fillMaxWidth())
+        Text(
+            label,
+            color = if (color == Color.Unspecified) palette.textStrong else color,
+            fontSize = 13.sp,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }

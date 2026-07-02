@@ -21,8 +21,16 @@ fun gridPositions(isFullRow: List<Boolean>, columns: Int): List<Pair<Int, Int>> 
     }
 }
 
-/** Number of grid rows needed to display all items without scrolling. */
-fun requiredRows(isFullRow: List<Boolean>, columns: Int): Int {
-    if (isFullRow.isEmpty()) return 0
-    return gridPositions(isFullRow, columns).last().first + 1
+/**
+ * Number of full-height grid rows needed to display all items without
+ * scrolling. Dividers are thin and don't consume a grid row: only rows
+ * containing at least one regular tile count against the capacity.
+ */
+fun requiredTileRows(isFullRow: List<Boolean>, columns: Int): Int {
+    val positions = gridPositions(isFullRow, columns)
+    return positions.indices
+        .filterNot { isFullRow[it] }
+        .map { positions[it].first }
+        .distinct()
+        .size
 }

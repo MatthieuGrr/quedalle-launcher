@@ -18,14 +18,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.mlg.quedalle.R
-import dev.mlg.quedalle.ui.theme.QuedalleColors
+import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
 
 @Composable
 fun EditToolbar(
@@ -38,7 +37,7 @@ fun EditToolbar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(QuedalleColors.SurfaceDim),
+            .background(LocalQuedallePalette.current.surfaceDim),
     ) {
         // Row 1: add buttons + settings + done
         Row(
@@ -89,16 +88,17 @@ private fun StepControl(
     label: String, value: Int, min: Int, max: Int,
     onDec: () -> Unit, onInc: () -> Unit,
 ) {
+    val palette = LocalQuedallePalette.current
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(label, color = QuedalleColors.TextMuted, fontSize = 11.sp)
+        Text(label, color = palette.textMuted, fontSize = 11.sp)
         Spacer(Modifier.width(6.dp))
         IconButton(onClick = onDec, enabled = value > min, modifier = Modifier.size(28.dp)) {
-            Text("−", color = if (value > min) Color.White else QuedalleColors.TextDisabled, fontSize = 16.sp)
+            Text("−", color = if (value > min) palette.textStrong else palette.textDisabled, fontSize = 16.sp)
         }
-        Text("$value", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Medium,
+        Text("$value", color = palette.textStrong, fontSize = 13.sp, fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center, modifier = Modifier.widthIn(min = 20.dp))
         IconButton(onClick = onInc, enabled = value < max, modifier = Modifier.size(28.dp)) {
-            Text("+", color = if (value < max) Color.White else QuedalleColors.TextDisabled, fontSize = 16.sp)
+            Text("+", color = if (value < max) palette.textStrong else palette.textDisabled, fontSize = 16.sp)
         }
     }
 }

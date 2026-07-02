@@ -11,6 +11,7 @@ A minimal, tile-based Android home screen launcher built with Jetpack Compose.
 - **Divider tiles** — thin horizontal lines as visual separators
 - **Drag & drop** — long-press any tile to reorder
 - **Color picker** — 12 presets + app-color + transparent per tile
+- **Light & dark theme** — follows the system, or forced in settings
 - **Search** — accent-insensitive inline search of installed apps
 - **Rename tiles** — give pinned apps your own labels
 - **Hide apps** — keep apps out of search results
@@ -26,7 +27,7 @@ you configured, nothing more. No pages, no app drawer, no widgets.
 
 | EN | FR |
 |---|---|
-| ![English screenshot](fastlane/metadata/android/en-US/phoneScreenshots/Screenshot_en-US.png) | ![French screenshot](fastlane/metadata/android/fr-FR/phoneScreenshots/Screenshot_fr-FR.png) |
+| ![English screenshot](fastlane/metadata/android/en-US/images/phoneScreenshots/Screenshot_en-US.png) | ![French screenshot](fastlane/metadata/android/fr-FR/images/phoneScreenshots/Screenshot_fr-FR.png) |
 
 ## Install
 

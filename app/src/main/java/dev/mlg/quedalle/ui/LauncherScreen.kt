@@ -38,6 +38,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.mlg.quedalle.R
 import dev.mlg.quedalle.model.TileItem
+import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
 import dev.mlg.quedalle.ui.theme.QuedalleColors
 import dev.mlg.quedalle.viewmodel.LauncherViewModel
 import dev.mlg.quedalle.viewmodel.UiMessage
@@ -45,6 +46,7 @@ import dev.mlg.quedalle.viewmodel.UiMessage
 @Composable
 fun LauncherScreen(vm: LauncherViewModel) {
     val state by vm.uiState.collectAsStateWithLifecycle()
+    val themeMode by vm.themeMode.collectAsStateWithLifecycle()
     var longPressedTile by remember { mutableStateOf<TileItem?>(null) }
     var renamingTile    by remember { mutableStateOf<TileItem.App?>(null) }
     var isEditMode      by rememberSaveable { mutableStateOf(false) }
@@ -81,11 +83,13 @@ fun LauncherScreen(vm: LauncherViewModel) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(QuedalleColors.Background)
+            .background(LocalQuedallePalette.current.background)
             .windowInsetsPadding(WindowInsets.systemBars),
     ) {
         if (showSettings) {
             SettingsScreen(
+                themeMode = themeMode,
+                onThemeModeChange = vm::setThemeMode,
                 swipeDownNotifications = state.swipeDownNotifications,
                 onSwipeDownChange = vm::setSwipeDownNotifications,
                 hiddenApps = state.hiddenApps,
@@ -212,6 +216,12 @@ fun LauncherScreen(vm: LauncherViewModel) {
                     { vm.requestUninstall(app); longPressedTile = null }
                 } else null,
                 onAppInfo   = { vm.openAppInfo(app); longPressedTile = null },
+                onSettings  = {
+                    vm.clearSearch()
+                    focusManager.clearFocus()
+                    showSettings = true
+                    longPressedTile = null
+                },
             )
         }
         is TileItem.Spacer -> TileColorDialog(
@@ -278,7 +288,7 @@ private fun EmptyHint(isSearching: Boolean, modifier: Modifier = Modifier) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Text(
             text = stringResource(if (isSearching) R.string.empty_search else R.string.empty_hint),
-            color = QuedalleColors.TextFaint, fontSize = 13.sp, textAlign = TextAlign.Center,
+            color = LocalQuedallePalette.current.textFaint, fontSize = 13.sp, textAlign = TextAlign.Center,
         )
     }
 }

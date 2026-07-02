@@ -39,6 +39,7 @@ data class LayoutBackup(
     val columns: Int,
     val rows: Int,
     val swipeDownNotifications: Boolean = true,
+    val theme: String = "system",
     val hidden: List<String> = emptyList(),
     val tiles: List<TileDef> = emptyList(),
 )
@@ -74,6 +75,7 @@ object TileCodec {
             columns = obj["columns"]?.jsonPrimitive?.intOrNull ?: 3,
             rows = obj["rows"]?.jsonPrimitive?.intOrNull ?: 4,
             swipeDownNotifications = obj["swipeDownNotifications"]?.jsonPrimitive?.booleanOrNull ?: true,
+            theme = obj["theme"]?.jsonPrimitive?.content ?: "system",
             hidden = obj["hidden"]?.jsonArray?.mapNotNull {
                 try { it.jsonPrimitive.content } catch (_: Exception) { null }
             } ?: emptyList(),

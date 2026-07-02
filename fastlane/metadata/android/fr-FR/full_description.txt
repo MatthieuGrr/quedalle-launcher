@@ -25,6 +25,7 @@ PERSONNALISATION
 
 - Glisser-déposer pour réorganiser les tuiles
 - 12 couleurs prédéfinies par tuile, plus couleur-app et transparent
+- Thème clair ou sombre, suivant le système
 - Recherche d'applications insensible aux accents
 - Masquage d'applications de la recherche
 - Geste optionnel : balayage vers le bas pour le volet de notifications

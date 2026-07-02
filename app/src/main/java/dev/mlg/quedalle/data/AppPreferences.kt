@@ -9,7 +9,8 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import dev.mlg.quedalle.model.requiredRows
+import dev.mlg.quedalle.model.ThemeMode
+import dev.mlg.quedalle.model.requiredTileRows
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -25,6 +26,7 @@ class AppPreferences(private val context: Context) {
         private val KEY_GRID_ROWS    = intPreferencesKey("grid_rows")
         private val KEY_HIDDEN_APPS  = stringSetPreferencesKey("hidden_apps")
         private val KEY_SWIPE_DOWN   = booleanPreferencesKey("swipe_down_notifications")
+        private val KEY_THEME        = stringPreferencesKey("theme")
 
         const val MIN_COLUMNS = 2
         const val MAX_COLUMNS = 5
@@ -42,6 +44,8 @@ class AppPreferences(private val context: Context) {
     val hiddenApps: Flow<Set<String>> = context.dataStore.data.map { it[KEY_HIDDEN_APPS] ?: emptySet() }
 
     val swipeDownNotifications: Flow<Boolean> = context.dataStore.data.map { it[KEY_SWIPE_DOWN] ?: true }
+
+    val themeMode: Flow<ThemeMode> = context.dataStore.data.map { ThemeMode.fromKey(it[KEY_THEME]) }
 
     /**
      * Pins or unpins an app. Pinning is refused when the grid is full.
@@ -93,7 +97,7 @@ class AppPreferences(private val context: Context) {
         var fitted = true
         context.dataStore.edit { prefs ->
             val rows = prefs[KEY_GRID_ROWS] ?: DEFAULT_ROWS
-            if (requiredRows(defsOf(prefs).fullRowFlags(), target) <= rows) {
+            if (requiredTileRows(defsOf(prefs).fullRowFlags(), target) <= rows) {
                 prefs[KEY_GRID_COLUMNS] = target
             } else {
                 fitted = false
@@ -108,7 +112,7 @@ class AppPreferences(private val context: Context) {
         var fitted = true
         context.dataStore.edit { prefs ->
             val columns = prefs[KEY_GRID_COLUMNS] ?: DEFAULT_COLUMNS
-            if (requiredRows(defsOf(prefs).fullRowFlags(), columns) <= target) {
+            if (requiredTileRows(defsOf(prefs).fullRowFlags(), columns) <= target) {
                 prefs[KEY_GRID_ROWS] = target
             } else {
                 fitted = false
@@ -128,6 +132,10 @@ class AppPreferences(private val context: Context) {
         context.dataStore.edit { it[KEY_SWIPE_DOWN] = enabled }
     }
 
+    suspend fun setThemeMode(mode: ThemeMode) {
+        context.dataStore.edit { it[KEY_THEME] = mode.key }
+    }
+
     suspend fun exportBackup(): String {
         val prefs = context.dataStore.data.first()
         return TileCodec.encodeBackup(
@@ -135,6 +143,7 @@ class AppPreferences(private val context: Context) {
                 columns = prefs[KEY_GRID_COLUMNS] ?: DEFAULT_COLUMNS,
                 rows = prefs[KEY_GRID_ROWS] ?: DEFAULT_ROWS,
                 swipeDownNotifications = prefs[KEY_SWIPE_DOWN] ?: true,
+                theme = prefs[KEY_THEME] ?: ThemeMode.SYSTEM.key,
                 hidden = (prefs[KEY_HIDDEN_APPS] ?: emptySet()).toList(),
                 tiles = defsOf(prefs),
             )
@@ -145,7 +154,7 @@ class AppPreferences(private val context: Context) {
     suspend fun importBackup(raw: String): Boolean {
         val backup = TileCodec.decodeBackup(raw) ?: return false
         val columns = backup.columns.coerceIn(MIN_COLUMNS, MAX_COLUMNS)
-        val needed = requiredRows(backup.tiles.fullRowFlags(), columns)
+        val needed = requiredTileRows(backup.tiles.fullRowFlags(), columns)
         if (needed > MAX_ROWS) return false
         val rows = maxOf(backup.rows.coerceIn(MIN_ROWS, MAX_ROWS), needed)
         context.dataStore.edit { prefs ->
@@ -154,6 +163,7 @@ class AppPreferences(private val context: Context) {
             prefs[KEY_GRID_ROWS] = rows
             prefs[KEY_HIDDEN_APPS] = backup.hidden.toSet()
             prefs[KEY_SWIPE_DOWN] = backup.swipeDownNotifications
+            prefs[KEY_THEME] = ThemeMode.fromKey(backup.theme).key
         }
         return true
     }
@@ -161,7 +171,7 @@ class AppPreferences(private val context: Context) {
     private fun fits(prefs: Preferences, defs: List<TileDef>): Boolean {
         val columns = prefs[KEY_GRID_COLUMNS] ?: DEFAULT_COLUMNS
         val rows = prefs[KEY_GRID_ROWS] ?: DEFAULT_ROWS
-        return requiredRows(defs.fullRowFlags(), columns) <= rows
+        return requiredTileRows(defs.fullRowFlags(), columns) <= rows
     }
 
     private fun defsOf(prefs: Preferences): List<TileDef> =

@@ -1,8 +1,9 @@
+• Thème clair : suit le système par défaut, forçable dans les Réglages
 • Les applications du profil professionnel sont désormais listées (libellés badgés)
 • Renommage des tuiles, masquage d'apps de la recherche, désinstallation via l'appui long
 • Geste optionnel : balayage vers le bas pour ouvrir le volet de notifications
 • Export/import de la disposition au format JSON
 • Recherche insensible aux accents, Entrée lance le premier résultat
-• L'épinglage est bloqué quand la grille est pleine au lieu de masquer des tuiles
+• L'épinglage est bloqué quand la grille est pleine ; les séparateurs ne comptent plus comme une ligne entière
 • Suppression complète de l'écoute des notifications — zéro permission spéciale
 • Nouvelle icône adaptative et monochrome (thématisée)

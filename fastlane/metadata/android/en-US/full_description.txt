@@ -25,6 +25,7 @@ CUSTOMIZATION
 
 - Drag and drop to reorder any tile
 - 12 color presets per tile, plus app-color and transparent
+- Light or dark theme, following the system
 - Accent-insensitive inline app search
 - Hide apps from search results
 - Optional swipe-down gesture for the notification shade
