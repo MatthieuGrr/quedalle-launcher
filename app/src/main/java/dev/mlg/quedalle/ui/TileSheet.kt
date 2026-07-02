@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -50,6 +51,10 @@ fun TileSheet(
     val palette = LocalQuedallePalette.current
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        // No half-expanded anchor: with scrollable content whose height sits
+        // near that anchor, leftover scroll deltas make the sheet oscillate
+        // between anchors. Fully expanded, the inner scroll owns the gesture.
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = palette.surface,
     ) {
         Column(
@@ -223,6 +228,7 @@ fun HomeSheet(
     val palette = LocalQuedallePalette.current
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = palette.surface,
     ) {
         Column(
