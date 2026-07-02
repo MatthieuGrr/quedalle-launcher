@@ -1,20 +1,23 @@
 package dev.mlg.quedalle.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -22,15 +25,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.mlg.quedalle.R
@@ -39,6 +47,9 @@ import dev.mlg.quedalle.model.TEXT_COLOR_AUTO
 import dev.mlg.quedalle.model.TileItem
 import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
 import dev.mlg.quedalle.ui.theme.QuedalleColors
+import dev.mlg.quedalle.ui.theme.Textures
+import dev.mlg.quedalle.ui.theme.resolveTileColor
+import dev.mlg.quedalle.ui.theme.resolveTileTextColor
 import dev.mlg.quedalle.viewmodel.LauncherViewModel
 
 /**
@@ -93,26 +104,58 @@ private fun AppSheetContent(
     val app = tile.info
 
     if (app.isPinned) {
-        // Name — applied live, blank restores the original label.
+        // Live preview of the tile; the name is edited directly on it and
+        // any style change below is reflected here immediately.
         var name by remember(tile.id) { mutableStateOf(app.customLabel ?: app.label) }
-        OutlinedTextField(
-            value = name,
-            onValueChange = {
-                name = it
-                vm.renameTile(tile.id, it.takeIf { text -> text.isNotBlank() && text != app.label })
-            },
-            singleLine = true,
-            placeholder = { Text(app.label, color = palette.textMuted, fontSize = 14.sp) },
-            supportingText = {
-                Text(app.packageName, color = palette.textMuted, fontSize = 10.sp)
-            },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor     = palette.textStrong,
-                unfocusedTextColor   = palette.textStrong,
-                focusedBorderColor   = palette.borderFocused,
-                unfocusedBorderColor = palette.borderIdle,
-                cursorColor          = palette.textStrong,
-            ),
+        val previewBg = resolveTileColor(tile.style.background ?: QuedalleColors.TileAppColor)
+        val previewBrush = Textures.brush(tile.style.texture, previewBg)
+        val previewText = resolveTileTextColor(tile.style, previewBg)
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .size(width = 148.dp, height = 72.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .then(
+                        if (previewBrush != null) Modifier.background(previewBrush)
+                        else Modifier.background(previewBg)
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                BasicTextField(
+                    value = name,
+                    onValueChange = {
+                        name = it
+                        vm.renameTile(tile.id, it.takeIf { text -> text.isNotBlank() && text != app.label })
+                    },
+                    textStyle = TextStyle(
+                        color = previewText,
+                        fontSize = 12.sp,
+                        lineHeight = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center,
+                    ),
+                    cursorBrush = SolidColor(previewText),
+                    maxLines = 2,
+                    decorationBox = { innerTextField ->
+                        Box(contentAlignment = Alignment.Center) {
+                            if (name.isEmpty()) {
+                                Text(
+                                    app.label,
+                                    color = previewText.copy(alpha = 0.4f),
+                                    fontSize = 12.sp,
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
+                            innerTextField()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
+                )
+            }
+        }
+        Text(
+            app.packageName,
+            color = palette.textMuted, fontSize = 10.sp, textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
 

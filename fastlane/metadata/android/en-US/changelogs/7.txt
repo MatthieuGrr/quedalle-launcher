@@ -1,6 +1,5 @@
-• One long-press sheet per tile: rename, colors, texture and actions together, applied live
-• Global tile style in Settings: restyle the whole grid at once, per-tile overrides preserved
-• Textures: iridescent, gradient and glass effects
-• Custom colors via HSL sliders, automatic text contrast
-• Styles included in backup export/import
-• Long-press empty space: grid editing and settings, both top-level
+• One long-press sheet per tile: editable live preview (type the name right on the tile), colors, texture and actions, applied instantly
+• Global tile style in Settings: restyle the whole grid at once
+• Long-press empty space: grid editing and settings
+• Smooth drag & drop — the tile follows your finger
+• Textures (iridescent, gradient, glass), HSL sliders, auto text contrast

@@ -32,7 +32,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -117,6 +119,22 @@ fun TileGrid(
             ) { tile ->
                 val isDragging = draggingKey == tile.id
 
+                // The dragged tile follows the finger (dragAcc is its offset
+                // from the cell it currently occupies); the others animate to
+                // their new position when the order changes.
+                val visualModifier = if (isDragging) {
+                    Modifier
+                        .zIndex(1f)
+                        .graphicsLayer {
+                            translationX = dragAcc.x
+                            translationY = dragAcc.y
+                            scaleX = 1.04f
+                            scaleY = 1.04f
+                        }
+                } else {
+                    Modifier.animateItem()
+                }
+
                 val gestureModifier = if (editMode) {
                     Modifier.pointerInput(tile.id, columns) {
                         detectDragGesturesAfterLongPress(
@@ -166,7 +184,7 @@ fun TileGrid(
                     )
                 }
 
-                TileCard(tile, isDragging, cellHDp, gestureModifier)
+                TileCard(tile, isDragging, cellHDp, visualModifier.then(gestureModifier))
             }
         }
     }

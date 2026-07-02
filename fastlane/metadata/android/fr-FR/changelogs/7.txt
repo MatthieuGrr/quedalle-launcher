@@ -1,6 +1,5 @@
-• Un seul panneau à l'appui long : renommage, couleurs, texture et actions réunis, appliqués en direct
-• Style global des tuiles dans Réglages : toute la grille d'un coup, personnalisations conservées
-• Textures : irisé, dégradé, verre
-• Couleurs libres via sliders HSL, contraste du texte automatique
-• Styles inclus dans l'export/import
-• Appui long sur le vide : édition de grille et réglages au premier niveau
+• Un seul panneau à l'appui long : aperçu éditable (le nom se tape sur la tuile), couleurs, texture et actions, appliqués en direct
+• Style global des tuiles dans Réglages : toute la grille d'un coup
+• Appui long sur le vide : édition de grille et réglages
+• Glisser-déposer fluide — la tuile suit le doigt
+• Textures (irisé, dégradé, verre), sliders HSL, contraste auto
