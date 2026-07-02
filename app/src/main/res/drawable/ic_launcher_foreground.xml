@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 2×2 grid of rounded tiles, echoing the launcher's tile grid. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M36,31 h11 a5,5 0 0 1 5,5 v11 a5,5 0 0 1 -5,5 h-11 a5,5 0 0 1 -5,-5 v-11 a5,5 0 0 1 5,-5 z"/>
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M61,31 h11 a5,5 0 0 1 5,5 v11 a5,5 0 0 1 -5,5 h-11 a5,5 0 0 1 -5,-5 v-11 a5,5 0 0 1 5,-5 z"/>
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M36,56 h11 a5,5 0 0 1 5,5 v11 a5,5 0 0 1 -5,5 h-11 a5,5 0 0 1 -5,-5 v-11 a5,5 0 0 1 5,-5 z"/>
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M61,56 h11 a5,5 0 0 1 5,5 v11 a5,5 0 0 1 -5,5 h-11 a5,5 0 0 1 -5,-5 v-11 a5,5 0 0 1 5,-5 z"/>
+</vector>

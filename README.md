@@ -6,13 +6,21 @@ A minimal, tile-based Android home screen launcher built with Jetpack Compose.
 
 ## Features
 
-- **App tiles** — grid of installed apps with notification badges
+- **App tiles** — a fixed grid of your essential apps, text only
 - **Spacer tiles** — colored blank tiles to organize your grid
 - **Divider tiles** — thin horizontal lines as visual separators
 - **Drag & drop** — long-press any tile to reorder
 - **Color picker** — 12 presets + app-color + transparent per tile
-- **Search** — filter installed apps inline
+- **Search** — accent-insensitive inline search of installed apps
+- **Rename tiles** — give pinned apps your own labels
+- **Hide apps** — keep apps out of search results
+- **Work profile** — apps from all profiles, with badged labels
+- **Swipe down** — open the notification shade (optional)
+- **Backup** — export/import your layout as a JSON file
 - **No internet, no accounts, no tracking**
+
+The home screen is intentionally finite: it holds exactly what fits the grid
+you configured, nothing more. No pages, no app drawer, no widgets.
 
 ## Screenshots
 
@@ -20,10 +28,24 @@ A minimal, tile-based Android home screen launcher built with Jetpack Compose.
 |---|---|
 | ![English screenshot](fastlane/metadata/android/en-US/phoneScreenshots/Screenshot_en-US.png) | ![French screenshot](fastlane/metadata/android/fr-FR/phoneScreenshots/Screenshot_fr-FR.png) |
 
+## Install
+
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/dev.mlg.quedalle/)
+
+Or grab the APK from the [releases page](https://github.com/MatthieuGrr/quedalle-launcher/releases)
+(release APKs are unsigned — F-Droid builds and signs its own).
+
 ## Requirements
 
 - Android 8.0 (API 26) or higher
-- Optional: notification access (to show badge counts on app tiles)
+
+## Permissions
+
+| Permission | Why |
+|---|---|
+| `REQUEST_DELETE_PACKAGES` | Offer "Uninstall" in the app long-press menu |
+
+No internet permission, no notification access, no analytics.
 
 ## Build from source
 
@@ -35,16 +57,7 @@ cd quedalle-launcher
 
 Output APK: `app/build/outputs/apk/release/app-release-unsigned.apk`
 
-## Permissions
-
-| Permission | Why |
-|---|---|
-| `QUERY_ALL_PACKAGES` | Launcher must enumerate all installed apps |
-| `BIND_NOTIFICATION_LISTENER_SERVICE` | Optional — show notification badge counts on app tiles |
-
-## Install via F-Droid
-
-*Submission in progress.*
+Run the unit tests with `./gradlew test`.
 
 ## License
 

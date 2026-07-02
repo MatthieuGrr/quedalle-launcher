@@ -1,23 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Quedalle</string>
-    <string name="notification_access_label">Accès aux notifications</string>
     <string name="search_placeholder">Rechercher…</string>
     <string name="action_pin">Épingler</string>
     <string name="action_unpin">Désépingler</string>
+    <string name="action_rename">Renommer</string>
     <string name="action_reorder">Réorganiser la grille</string>
+    <string name="action_hide">Masquer de la recherche</string>
+    <string name="action_unhide">Réafficher</string>
+    <string name="action_uninstall">Désinstaller</string>
     <string name="action_app_info">Infos de l\'application</string>
     <string name="dialog_spacer_title">Tuile vide</string>
     <string name="dialog_divider_title">Séparateur</string>
+    <string name="dialog_rename_title">Renommer la tuile</string>
+    <string name="rename_hint">Laisser vide pour restaurer le nom d\'origine</string>
     <string name="action_remove">Supprimer</string>
     <string name="action_confirm">Valider</string>
     <string name="action_cancel">Annuler</string>
-    <string name="notification_banner_text">Activer l\'accès aux notifications → couleurs actives</string>
     <string name="action_add_spacer">+ Vide</string>
     <string name="action_add_divider">+ Sépar.</string>
+    <string name="action_settings">Réglages</string>
     <string name="action_done">Terminé</string>
     <string name="label_columns">Col</string>
     <string name="label_rows">Lig</string>
     <string name="empty_search">Aucun résultat</string>
     <string name="empty_hint">Appui long sur une app pour l\'épingler</string>
+    <string name="msg_grid_full">Grille pleine — retirez une tuile ou agrandissez la grille</string>
+    <string name="msg_export_success">Disposition exportée</string>
+    <string name="msg_export_failed">Échec de l\'export</string>
+    <string name="msg_import_success">Disposition importée</string>
+    <string name="msg_import_failed">Échec de l\'import — fichier invalide</string>
+    <string name="settings_title">Réglages</string>
+    <string name="settings_swipe_down_title">Balayer vers le bas pour les notifications</string>
+    <string name="settings_swipe_down_subtitle">Ouvrir le volet de notifications d\'un glissement vers le bas sur l\'écran d\'accueil</string>
+    <string name="settings_backup_title">Sauvegarde</string>
+    <string name="settings_backup_subtitle">Sauvegarder ou restaurer votre disposition au format JSON</string>
+    <string name="settings_export">Exporter la disposition</string>
+    <string name="settings_import">Importer la disposition</string>
+    <string name="settings_hidden_apps">Applications masquées</string>
+    <string name="settings_hidden_none">Aucune application masquée. Appui long sur une app dans la recherche pour la masquer.</string>
+    <string name="settings_version">Quedalle %1$s</string>
 </resources>

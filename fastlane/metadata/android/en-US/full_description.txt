@@ -16,18 +16,23 @@ Just a launcher. A tile grid. Your apps. That's it.
 
 TILES
 
-- App tiles — with live notification badge counts
+- App tiles — text only, renameable
 - Spacer tiles — colored blanks to structure your grid
 - Divider tiles — thin lines between tile groups
+- A finite home screen: what fits your grid, nothing more
 
 CUSTOMIZATION
 
 - Drag and drop to reorder any tile
 - 12 color presets per tile, plus app-color and transparent
-- Inline app search
+- Accent-insensitive inline app search
+- Hide apps from search results
+- Optional swipe-down gesture for the notification shade
+- Export/import your layout as a JSON file
 
 PRIVACY
 
-- No internet permission
+- No internet permission, no notification access
 - No analytics, cloud sync, or accounts
+- Work profile apps supported
 - Open source under GPL-3.0

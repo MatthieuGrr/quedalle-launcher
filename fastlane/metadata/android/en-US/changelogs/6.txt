@@ -1,0 +1,8 @@
+• Work profile apps are now listed (with badged labels)
+• Rename pinned tiles, hide apps from search, uninstall from the long-press menu
+• Optional swipe-down gesture to open the notification shade
+• Export/import your layout as a JSON file
+• Accent-insensitive search, first result launches with Enter
+• Pinning is blocked when the grid is full instead of hiding tiles
+• Removed the notification listener and badges entirely — zero special permissions
+• New adaptive & themed (monochrome) icon

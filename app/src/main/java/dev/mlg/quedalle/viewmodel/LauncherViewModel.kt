@@ -1,38 +1,50 @@
 package dev.mlg.quedalle.viewmodel
 
+import android.annotation.SuppressLint
 import android.app.Application
-import android.content.BroadcastReceiver
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.net.Uri
-import android.os.Build
-import android.provider.Settings
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import dev.mlg.quedalle.data.AppPreferences
 import dev.mlg.quedalle.data.AppRepository
+import dev.mlg.quedalle.data.TYPE_APP
+import dev.mlg.quedalle.data.TYPE_DIVIDER
+import dev.mlg.quedalle.data.TYPE_SPACER
 import dev.mlg.quedalle.data.TileDef
 import dev.mlg.quedalle.model.AppInfo
 import dev.mlg.quedalle.model.TileItem
-import dev.mlg.quedalle.service.LauncherNotificationListener
+import dev.mlg.quedalle.model.searchRank
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.text.Collator
 import java.util.UUID
+
+private const val TAG = "LauncherViewModel"
 
 data class LauncherUiState(
     val displayedTiles: List<TileItem> = emptyList(),
     val searchQuery: String = "",
     val isSearching: Boolean = false,
-    val gridColumns: Int = 3,
-    val gridRows: Int = 4,
-    val hasNotificationAccess: Boolean = true,
+    val gridColumns: Int = AppPreferences.DEFAULT_COLUMNS,
+    val gridRows: Int = AppPreferences.DEFAULT_ROWS,
+    val swipeDownNotifications: Boolean = true,
+    val hiddenApps: List<AppInfo> = emptyList(),
 )
 
-private data class GridConfig(val columns: Int, val rows: Int, val hasNotifAccess: Boolean)
+enum class UiMessage { GRID_FULL, EXPORT_SUCCESS, EXPORT_FAILED, IMPORT_SUCCESS, IMPORT_FAILED }
+
+private data class GridConfig(val columns: Int, val rows: Int, val swipeDown: Boolean)
 private data class SearchState(val query: String, val isActive: Boolean)
 
 class LauncherViewModel(app: Application) : AndroidViewModel(app) {
@@ -42,95 +54,69 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _searchQuery    = MutableStateFlow("")
     private val _isSearchActive = MutableStateFlow(false)
-    private val _allApps        = MutableStateFlow<List<AppInfo>>(emptyList())
-    private val _hasNotifAccess = MutableStateFlow(isNotificationServiceEnabled())
 
-    private var refreshJob: Job? = null
-    private val packageReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            refreshJob?.cancel()
-            refreshJob = viewModelScope.launch(Dispatchers.IO) { _allApps.value = repo.getInstalledApps() }
-        }
-    }
+    private val _messages = MutableSharedFlow<UiMessage>(extraBufferCapacity = 8)
+    val messages: SharedFlow<UiMessage> = _messages.asSharedFlow()
 
-    init {
-        viewModelScope.launch(Dispatchers.IO) { _allApps.value = repo.getInstalledApps() }
-        val filter = IntentFilter().apply {
-            addAction(Intent.ACTION_PACKAGE_ADDED)
-            addAction(Intent.ACTION_PACKAGE_REMOVED)
-            addAction(Intent.ACTION_PACKAGE_REPLACED)
-            addAction(Intent.ACTION_PACKAGE_CHANGED)
-            addDataScheme("package")
+    private val allApps: StateFlow<List<AppInfo>> = repo.apps
+        .map { apps ->
+            val collator = Collator.getInstance()
+            apps.sortedWith(compareBy(collator) { it.label })
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            app.registerReceiver(packageReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            @Suppress("UnspecifiedRegisterReceiverFlag")
-            app.registerReceiver(packageReceiver, filter)
-        }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        getApplication<Application>().unregisterReceiver(packageReceiver)
-    }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private val gridConfig: Flow<GridConfig> = combine(
-        prefs.gridColumns, prefs.gridRows, _hasNotifAccess
-    ) { cols, rows, notif -> GridConfig(cols, rows, notif) }
+        prefs.gridColumns, prefs.gridRows, prefs.swipeDownNotifications
+    ) { cols, rows, swipe -> GridConfig(cols, rows, swipe) }
 
     private val searchState: Flow<SearchState> = combine(_searchQuery, _isSearchActive) { q, a ->
         SearchState(q, a)
     }
 
     val uiState: StateFlow<LauncherUiState> = combine(
-        _allApps,
+        allApps,
         prefs.tileDefinitions,
-        LauncherNotificationListener.notifiedPackages,
+        prefs.hiddenApps,
         searchState,
         gridConfig,
-    ) { allApps, tileDefs, notifs, search, config ->
-        val appMap     = allApps.associateBy { it.packageName }
-        val pinnedPkgs = tileDefs.filter { it.type == "app" }.mapNotNull { it.pkg }.toSet()
+    ) { apps, tileDefs, hidden, search, config ->
+        val appMap     = apps.associateBy { it.key }
+        val pinnedKeys = tileDefs.filter { it.type == TYPE_APP }.map { it.id }.toSet()
 
-        if (search.isActive) {
-            val nonPinned = allApps.filter { it.packageName !in pinnedPkgs }
-            val results   = if (search.query.isBlank()) nonPinned
-                            else nonPinned.filter { it.label.contains(search.query, ignoreCase = true) }
-            LauncherUiState(
-                displayedTiles = results.map { app ->
-                    TileItem.App(app.copy(hasNotification = app.packageName in notifs))
-                },
-                searchQuery = search.query,
-                isSearching = true,
-                gridColumns = config.columns,
-                gridRows    = config.rows,
-                hasNotificationAccess = config.hasNotifAccess,
-            )
+        val displayedTiles = if (search.isActive) {
+            apps.filter { it.key !in hidden }
+                .mapNotNull { app -> searchRank(app.label, search.query)?.let { rank -> rank to app } }
+                .sortedBy { it.first }
+                .map { (_, app) -> TileItem.App(app.copy(isPinned = app.key in pinnedKeys)) }
         } else {
-            LauncherUiState(
-                displayedTiles = tileDefs.mapNotNull { def ->
-                    when (def.type) {
-                        "app"     -> appMap[def.pkg]?.let { app ->
-                            TileItem.App(app.copy(isPinned = true, hasNotification = app.packageName in notifs))
-                        }
-                        "spacer"  -> TileItem.Spacer(def.id, def.color)
-                        "divider" -> TileItem.Divider(def.id, def.color)
-                        else      -> null
+            tileDefs.mapNotNull { def ->
+                when (def.type) {
+                    TYPE_APP     -> appMap[def.id]?.let { app ->
+                        TileItem.App(app.copy(isPinned = true, customLabel = def.label))
                     }
-                },
-                searchQuery = search.query,
-                isSearching = false,
-                gridColumns = config.columns,
-                gridRows    = config.rows,
-                hasNotificationAccess = config.hasNotifAccess,
-            )
+                    TYPE_SPACER  -> TileItem.Spacer(def.id, def.color)
+                    TYPE_DIVIDER -> TileItem.Divider(def.id, def.color)
+                    else         -> null
+                }
+            }
         }
+
+        LauncherUiState(
+            displayedTiles = displayedTiles,
+            searchQuery = search.query,
+            isSearching = search.isActive,
+            gridColumns = config.columns,
+            gridRows    = config.rows,
+            swipeDownNotifications = config.swipeDown,
+            hiddenApps = apps.filter { it.key in hidden },
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = LauncherUiState(hasNotificationAccess = isNotificationServiceEnabled()),
+        initialValue = LauncherUiState(),
     )
+
+    fun refreshApps() = repo.refresh()
 
     // ── Search ───────────────────────────────────────────────────────────────
     fun onSearchQueryChange(query: String) { _searchQuery.value = query }
@@ -141,73 +127,129 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
         _isSearchActive.value = false
     }
 
+    /** Launches the first search result (keyboard "Done" action). */
+    fun launchFirstResult() {
+        val first = uiState.value.displayedTiles.firstOrNull() as? TileItem.App ?: return
+        launchApp(first.info)
+    }
+
     // ── Tiles ────────────────────────────────────────────────────────────────
-    fun togglePin(packageName: String) { launchPrefs { prefs.togglePin(packageName) } }
+    fun togglePin(app: AppInfo) {
+        launchChecked { prefs.togglePin(app.key, app.packageName, app.userSerial) }
+    }
 
     fun saveTileOrder(tiles: List<TileItem>) {
-        launchPrefs { prefs.saveTiles(tiles.map { it.toDef() }) }
+        launchLogged { prefs.saveTiles(tiles.map { it.toDef() }) }
     }
 
     fun addSpacer(color: Int) {
-        launchPrefs { prefs.addTile(TileDef("spacer", "sp_${UUID.randomUUID()}", color = color)) }
+        launchChecked { prefs.addTile(TileDef(TYPE_SPACER, "sp_${UUID.randomUUID()}", color = color)) }
     }
 
     fun addDivider(color: Int) {
-        launchPrefs { prefs.addTile(TileDef("divider", "dv_${UUID.randomUUID()}", color = color)) }
+        launchChecked { prefs.addTile(TileDef(TYPE_DIVIDER, "dv_${UUID.randomUUID()}", color = color)) }
     }
 
-    fun updateDivider(id: String, color: Int) {
-        launchPrefs { prefs.updateTile(TileDef("divider", id, color = color)) }
+    fun updateTileColor(id: String, color: Int) {
+        launchLogged { prefs.updateTile(id) { it.copy(color = color) } }
     }
 
-    fun removeTile(id: String) { launchPrefs { prefs.removeTile(id) } }
+    fun removeTile(id: String) {
+        launchLogged { prefs.removeTile(id) }
+    }
 
-    fun updateSpacer(id: String, color: Int) {
-        launchPrefs { prefs.updateTile(TileDef("spacer", id, color = color)) }
+    /** Renames a pinned tile; null restores the original app label. */
+    fun renameTile(id: String, label: String?) {
+        launchLogged { prefs.updateTile(id) { it.copy(label = label?.takeIf(String::isNotBlank)) } }
+    }
+
+    fun setGridColumns(columns: Int) = launchChecked { prefs.setGridColumns(columns) }
+    fun setGridRows(rows: Int)       = launchChecked { prefs.setGridRows(rows) }
+
+    // ── Hidden apps ──────────────────────────────────────────────────────────
+    fun hideApp(app: AppInfo)   { launchLogged { prefs.setHidden(app.key, true) } }
+    fun unhideApp(app: AppInfo) { launchLogged { prefs.setHidden(app.key, false) } }
+
+    // ── Settings ─────────────────────────────────────────────────────────────
+    fun setSwipeDownNotifications(enabled: Boolean) {
+        launchLogged { prefs.setSwipeDownNotifications(enabled) }
+    }
+
+    fun exportTo(uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val data = prefs.exportBackup()
+                getApplication<Application>().contentResolver.openOutputStream(uri, "wt")
+                    ?.use { it.write(data.toByteArray()) }
+                    ?: error("Cannot open $uri for writing")
+                _messages.emit(UiMessage.EXPORT_SUCCESS)
+            } catch (e: Exception) {
+                Log.e(TAG, "Export failed", e)
+                _messages.emit(UiMessage.EXPORT_FAILED)
+            }
+        }
+    }
+
+    fun importFrom(uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val raw = getApplication<Application>().contentResolver.openInputStream(uri)
+                    ?.use { it.readBytes().decodeToString() }
+                    ?: error("Cannot open $uri for reading")
+                _messages.emit(if (prefs.importBackup(raw)) UiMessage.IMPORT_SUCCESS else UiMessage.IMPORT_FAILED)
+            } catch (e: Exception) {
+                Log.e(TAG, "Import failed", e)
+                _messages.emit(UiMessage.IMPORT_FAILED)
+            }
+        }
     }
 
     // ── App actions ──────────────────────────────────────────────────────────
-    fun launchApp(packageName: String) {
-        val intent = getApplication<Application>().packageManager
-            .getLaunchIntentForPackage(packageName)
-            ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) ?: return
-        getApplication<Application>().startActivity(intent)
+    fun launchApp(app: AppInfo) {
+        repo.launchApp(app)
+        if (_isSearchActive.value) clearSearch()
     }
 
-    fun openAppInfo(packageName: String) {
-        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-            data = Uri.fromParts("package", packageName, null)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    fun openAppInfo(app: AppInfo) = repo.openAppInfo(app)
+
+    fun requestUninstall(app: AppInfo) = repo.requestUninstall(app)
+
+    /** Opens the system notification shade (used by the swipe-down gesture). */
+    @SuppressLint("WrongConstant", "PrivateApi")
+    fun openNotificationShade() {
+        try {
+            val service = getApplication<Application>().getSystemService("statusbar")
+            Class.forName("android.app.StatusBarManager")
+                .getMethod("expandNotificationsPanel")
+                .invoke(service)
+        } catch (e: Exception) {
+            Log.w(TAG, "Cannot expand notification shade", e)
         }
-        getApplication<Application>().startActivity(intent)
     }
 
-    fun openNotificationSettings() {
-        val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        getApplication<Application>().startActivity(intent)
+    private fun launchLogged(block: suspend () -> Unit) {
+        viewModelScope.launch {
+            try {
+                block()
+            } catch (e: Exception) {
+                Log.e(TAG, "Preference update failed", e)
+            }
+        }
     }
 
-    fun refreshNotificationAccess() { _hasNotifAccess.value = isNotificationServiceEnabled() }
-    fun setGridColumns(columns: Int) { launchPrefs { prefs.setGridColumns(columns) } }
-    fun setGridRows(rows: Int)       { launchPrefs { prefs.setGridRows(rows) } }
-
-    private fun isNotificationServiceEnabled(): Boolean {
-        val flat = Settings.Secure.getString(
-            getApplication<Application>().contentResolver,
-            "enabled_notification_listeners",
-        ) ?: return false
-        val cn = ComponentName(getApplication(), LauncherNotificationListener::class.java).flattenToString()
-        return flat.contains(cn)
-    }
-
-    private fun launchPrefs(block: suspend () -> Unit) {
-        viewModelScope.launch { runCatching { block() } }
+    private fun launchChecked(block: suspend () -> Boolean) {
+        viewModelScope.launch {
+            try {
+                if (!block()) _messages.emit(UiMessage.GRID_FULL)
+            } catch (e: Exception) {
+                Log.e(TAG, "Preference update failed", e)
+            }
+        }
     }
 }
 
 private fun TileItem.toDef() = when (this) {
-    is TileItem.App     -> TileDef("app",     id, pkg = id)
-    is TileItem.Spacer  -> TileDef("spacer",  id, color = color)
-    is TileItem.Divider -> TileDef("divider", id, color = color)
+    is TileItem.App     -> TileDef(TYPE_APP, id, pkg = info.packageName, userSerial = info.userSerial, label = info.customLabel)
+    is TileItem.Spacer  -> TileDef(TYPE_SPACER,  id, color = color)
+    is TileItem.Divider -> TileDef(TYPE_DIVIDER, id, color = color)
 }
