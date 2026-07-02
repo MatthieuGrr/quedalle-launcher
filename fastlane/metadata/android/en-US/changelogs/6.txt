@@ -1,0 +1,9 @@
+• Light theme (system / manual choice)
+• Work profile apps supported
+• Rename tiles, hide apps from search, uninstall via long-press
+• Optional swipe-down gesture for the notification shade
+• Export/import your layout as JSON
+• Accent-insensitive search
+• Pinning is blocked when the grid is full; dividers no longer count as a full row
+• Notification listener removed — zero special permissions
+• New adaptive & themed icon

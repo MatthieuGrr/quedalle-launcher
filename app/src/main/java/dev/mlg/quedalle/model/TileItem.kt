@@ -4,7 +4,7 @@ sealed class TileItem {
     abstract val id: String
 
     data class App(val info: AppInfo) : TileItem() {
-        override val id: String get() = info.packageName
+        override val id: String get() = info.key
     }
 
     data class Spacer(
@@ -17,3 +17,5 @@ sealed class TileItem {
         val color: Int,
     ) : TileItem()
 }
+
+fun List<TileItem>.fullRowFlags(): List<Boolean> = map { it is TileItem.Divider }

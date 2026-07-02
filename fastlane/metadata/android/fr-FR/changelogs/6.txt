@@ -1,0 +1,9 @@
+• Thème clair (système / choix manuel)
+• Apps du profil professionnel prises en charge
+• Renommage de tuiles, masquage d'apps, désinstallation via appui long
+• Geste optionnel : balayage bas pour les notifications
+• Export/import de la disposition en JSON
+• Recherche insensible aux accents
+• Épinglage bloqué quand la grille est pleine ; séparateurs fins
+• Écoute des notifications supprimée — zéro permission spéciale
+• Nouvelle icône adaptative

@@ -16,18 +16,24 @@ Juste un lanceur. Une grille de tuiles. Vos applis. C'est tout.
 
 TUILES
 
-- Tuiles d'apps — avec compteur de notifications en temps réel
+- Tuiles d'apps — texte uniquement, renommables
 - Tuiles Spacer — tuiles colorées pour structurer visuellement votre grille
 - Séparateurs — lignes fines entre les groupes de tuiles
+- Un écran d'accueil fini : ce qui tient dans votre grille, rien de plus
 
 PERSONNALISATION
 
 - Glisser-déposer pour réorganiser les tuiles
 - 12 couleurs prédéfinies par tuile, plus couleur-app et transparent
-- Recherche d'applications intégrée
+- Thème clair ou sombre, suivant le système
+- Recherche d'applications insensible aux accents
+- Masquage d'applications de la recherche
+- Geste optionnel : balayage vers le bas pour le volet de notifications
+- Export/import de la disposition au format JSON
 
 CONFIDENTIALITÉ
 
-- Aucune permission internet
+- Aucune permission internet, aucun accès aux notifications
 - Aucun analytics, cloud ou synchronisation
+- Applications du profil professionnel prises en charge
 - Code source ouvert sous licence GPL-3.0
