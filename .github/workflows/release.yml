@@ -4,6 +4,11 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to create and release (e.g. v2.0)'
+        required: true
 
 jobs:
   release:
@@ -14,6 +19,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Resolve tag
+        run: echo "TAG=${{ github.event.inputs.tag || github.ref_name }}" >> $GITHUB_ENV
+
+      - name: Create tag (manual dispatch only)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG" "$GITHUB_SHA"
+          git push origin "$TAG"
+
       - name: Set Java 17
         run: echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
 
@@ -22,8 +38,8 @@ jobs:
 
       - name: Create GitHub Release
         run: |
-          gh release create "$GITHUB_REF_NAME" \
-            --title "Quedalle $GITHUB_REF_NAME" \
+          gh release create "$TAG" \
+            --title "Quedalle $TAG" \
             --generate-notes \
             app/build/outputs/apk/release/app-release-unsigned.apk \
             app/build/outputs/apk/debug/app-debug.apk
