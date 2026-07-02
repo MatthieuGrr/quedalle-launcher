@@ -23,7 +23,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -51,15 +56,17 @@ fun TileSheet(
     val palette = LocalQuedallePalette.current
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        // No half-expanded anchor: with scrollable content whose height sits
-        // near that anchor, leftover scroll deltas make the sheet oscillate
-        // between anchors. Fully expanded, the inner scroll owns the gesture.
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = palette.surface,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                // When the content already fits, a scroll attempt has nothing
+                // to consume; without this the leftover upward delta reaches
+                // the sheet's drag and it oscillates against its spring.
+                // Downward deltas still pass through so swipe-to-dismiss works.
+                .nestedScroll(BlockUpwardOverscroll)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 20.dp)
@@ -200,6 +207,15 @@ private fun DividerSheetContent(
             vm.removeTile(tile.id); onDismiss()
         }
     }
+}
+
+/** Swallows upward scroll leftovers so they never drag the sheet itself. */
+private object BlockUpwardOverscroll : NestedScrollConnection {
+    override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset =
+        if (available.y < 0f) available.copy(x = 0f) else Offset.Zero
+
+    override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity =
+        if (available.y < 0f) available.copy(x = 0f) else Velocity.Zero
 }
 
 @Composable
