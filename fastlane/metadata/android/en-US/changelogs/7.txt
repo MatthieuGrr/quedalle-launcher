@@ -1,0 +1,5 @@
+• Appearance editor for tiles: pick background and text colors (presets or custom HSL sliders)
+• Textures: iridescent, gradient and glass effects — static, zero battery cost
+• Automatic text contrast on custom backgrounds
+• Spacer tiles support textures too
+• All choices ride along in backup export/import

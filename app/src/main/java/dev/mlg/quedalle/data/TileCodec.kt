@@ -28,6 +28,10 @@ data class TileDef(
     @SerialName("u") val userSerial: Long? = null,
     @SerialName("l") val label: String? = null,
     @SerialName("c") val color: Int = DEFAULT_TILE_COLOR,
+    /** Text color for app tiles; null = automatic (contrast-based). */
+    @SerialName("fc") val textColor: Int? = null,
+    /** Texture id (see Textures); null = flat color. */
+    @SerialName("tx") val texture: String? = null,
 )
 
 fun List<TileDef>.fullRowFlags(): List<Boolean> = map { it.type == TYPE_DIVIDER }

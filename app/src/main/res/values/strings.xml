@@ -5,6 +5,17 @@
     <string name="action_pin">Pin</string>
     <string name="action_unpin">Unpin</string>
     <string name="action_rename">Rename</string>
+    <string name="action_appearance">Appearance</string>
+    <string name="appearance_background">Background</string>
+    <string name="appearance_text">Text</string>
+    <string name="appearance_texture">Texture</string>
+    <string name="texture_none">Plain</string>
+    <string name="texture_iridescent">Iridescent</string>
+    <string name="texture_gradient">Gradient</string>
+    <string name="texture_glass">Glass</string>
+    <string name="color_auto">Auto</string>
+    <string name="color_custom">Custom…</string>
+    <string name="action_reset">Reset to default</string>
     <string name="action_reorder">Reorder grid</string>
     <string name="action_hide">Hide from search</string>
     <string name="action_unhide">Unhide</string>

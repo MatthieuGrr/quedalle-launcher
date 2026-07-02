@@ -19,10 +19,20 @@ class TileCodecTest {
         val defs = listOf(
             TileDef(TYPE_APP, "com.example.app", pkg = "com.example.app"),
             TileDef(TYPE_APP, "com.work.app#10", pkg = "com.work.app", userSerial = 10L, label = "Renamed"),
-            TileDef(TYPE_SPACER, "sp_1", color = 0xFF123456.toInt()),
+            TileDef(TYPE_APP, "com.styled", pkg = "com.styled",
+                color = 0xFF0F4C81.toInt(), textColor = 0xFFFFD54F.toInt(), texture = "iris"),
+            TileDef(TYPE_SPACER, "sp_1", color = 0xFF123456.toInt(), texture = "glass"),
             TileDef(TYPE_DIVIDER, "dv_1", color = 0xFF2A2A2A.toInt()),
         )
         assertEquals(defs, TileCodec.decode(TileCodec.encode(defs)))
+    }
+
+    @Test
+    fun `v2_0 data without style fields gets defaults`() {
+        val v20 = """[{"t":"app","id":"com.a","pkg":"com.a","c":-15461356}]"""
+        val def = TileCodec.decode(v20)!!.single()
+        assertEquals(null, def.textColor)
+        assertEquals(null, def.texture)
     }
 
     @Test

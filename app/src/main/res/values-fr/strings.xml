@@ -5,6 +5,17 @@
     <string name="action_pin">Épingler</string>
     <string name="action_unpin">Désépingler</string>
     <string name="action_rename">Renommer</string>
+    <string name="action_appearance">Apparence</string>
+    <string name="appearance_background">Fond</string>
+    <string name="appearance_text">Texte</string>
+    <string name="appearance_texture">Texture</string>
+    <string name="texture_none">Aplat</string>
+    <string name="texture_iridescent">Irisé</string>
+    <string name="texture_gradient">Dégradé</string>
+    <string name="texture_glass">Verre</string>
+    <string name="color_auto">Auto</string>
+    <string name="color_custom">Personnalisée…</string>
+    <string name="action_reset">Par défaut</string>
     <string name="action_reorder">Réorganiser la grille</string>
     <string name="action_hide">Masquer de la recherche</string>
     <string name="action_unhide">Réafficher</string>

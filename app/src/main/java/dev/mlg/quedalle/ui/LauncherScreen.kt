@@ -49,6 +49,7 @@ fun LauncherScreen(vm: LauncherViewModel) {
     val themeMode by vm.themeMode.collectAsStateWithLifecycle()
     var longPressedTile by remember { mutableStateOf<TileItem?>(null) }
     var renamingTile    by remember { mutableStateOf<TileItem.App?>(null) }
+    var stylingTile     by remember { mutableStateOf<TileItem?>(null) }
     var isEditMode      by rememberSaveable { mutableStateOf(false) }
     var showSettings    by rememberSaveable { mutableStateOf(false) }
     var showAddSpacer   by remember { mutableStateOf(false) }
@@ -201,6 +202,9 @@ fun LauncherScreen(vm: LauncherViewModel) {
                 onRename    = if (app.isPinned) {
                     { renamingTile = tile; longPressedTile = null }
                 } else null,
+                onAppearance = if (app.isPinned) {
+                    { stylingTile = tile; longPressedTile = null }
+                } else null,
                 onReorder   = if (app.isPinned) {
                     {
                         vm.clearSearch()
@@ -224,10 +228,15 @@ fun LauncherScreen(vm: LauncherViewModel) {
                 },
             )
         }
-        is TileItem.Spacer -> TileColorDialog(
-            titleRes  = R.string.dialog_spacer_title,
-            initial   = tile.color,
-            onConfirm = { color -> vm.updateTileColor(tile.id, color); longPressedTile = null },
+        is TileItem.Spacer -> AppearanceDialog(
+            previewLabel = null,
+            initialBackground = tile.color,
+            initialTextColor = null,
+            initialTexture = tile.texture,
+            onConfirm = { bg, _, texture ->
+                vm.updateTileAppearance(tile.id, bg, null, texture)
+                longPressedTile = null
+            },
             onRemove  = { vm.removeTile(tile.id); longPressedTile = null },
             onDismiss = { longPressedTile = null },
         )
@@ -253,11 +262,28 @@ fun LauncherScreen(vm: LauncherViewModel) {
         )
     }
 
+    (stylingTile as? TileItem.App)?.let { tile ->
+        AppearanceDialog(
+            previewLabel = tile.info.displayLabel,
+            initialBackground = tile.style.background,
+            initialTextColor = tile.style.textColor,
+            initialTexture = tile.style.texture,
+            onConfirm = { bg, text, texture ->
+                vm.updateTileAppearance(tile.id, bg, text, texture)
+                stylingTile = null
+            },
+            onRemove  = null,
+            onDismiss = { stylingTile = null },
+        )
+    }
+
     if (showAddSpacer) {
-        TileColorDialog(
-            titleRes  = R.string.dialog_spacer_title,
-            initial   = QuedalleColors.TilePresets.first(),
-            onConfirm = { color -> vm.addSpacer(color); showAddSpacer = false },
+        AppearanceDialog(
+            previewLabel = null,
+            initialBackground = QuedalleColors.TilePresets.first(),
+            initialTextColor = null,
+            initialTexture = null,
+            onConfirm = { bg, _, texture -> vm.addSpacer(bg, texture); showAddSpacer = false },
             onRemove  = null,
             onDismiss = { showAddSpacer = false },
         )

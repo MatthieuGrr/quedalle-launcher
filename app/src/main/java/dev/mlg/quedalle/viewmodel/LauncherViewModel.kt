@@ -15,6 +15,7 @@ import dev.mlg.quedalle.data.TileDef
 import dev.mlg.quedalle.model.AppInfo
 import dev.mlg.quedalle.model.ThemeMode
 import dev.mlg.quedalle.model.TileItem
+import dev.mlg.quedalle.model.TileStyle
 import dev.mlg.quedalle.model.searchRank
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -96,9 +97,12 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
             tileDefs.mapNotNull { def ->
                 when (def.type) {
                     TYPE_APP     -> appMap[def.id]?.let { app ->
-                        TileItem.App(app.copy(isPinned = true, customLabel = def.label))
+                        TileItem.App(
+                            info = app.copy(isPinned = true, customLabel = def.label),
+                            style = TileStyle(def.color, def.textColor, def.texture),
+                        )
                     }
-                    TYPE_SPACER  -> TileItem.Spacer(def.id, def.color)
+                    TYPE_SPACER  -> TileItem.Spacer(def.id, def.color, def.texture)
                     TYPE_DIVIDER -> TileItem.Divider(def.id, def.color)
                     else         -> null
                 }
@@ -146,8 +150,10 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
         launchLogged { prefs.saveTiles(tiles.map { it.toDef() }) }
     }
 
-    fun addSpacer(color: Int) {
-        launchChecked { prefs.addTile(TileDef(TYPE_SPACER, "sp_${UUID.randomUUID()}", color = color)) }
+    fun addSpacer(color: Int, texture: String?) {
+        launchChecked {
+            prefs.addTile(TileDef(TYPE_SPACER, "sp_${UUID.randomUUID()}", color = color, texture = texture))
+        }
     }
 
     fun addDivider(color: Int) {
@@ -156,6 +162,13 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
 
     fun updateTileColor(id: String, color: Int) {
         launchLogged { prefs.updateTile(id) { it.copy(color = color) } }
+    }
+
+    /** Applies background, text color and texture to a pinned app or spacer tile. */
+    fun updateTileAppearance(id: String, background: Int, textColor: Int?, texture: String?) {
+        launchLogged {
+            prefs.updateTile(id) { it.copy(color = background, textColor = textColor, texture = texture) }
+        }
     }
 
     fun removeTile(id: String) {
@@ -257,7 +270,11 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
 }
 
 private fun TileItem.toDef() = when (this) {
-    is TileItem.App     -> TileDef(TYPE_APP, id, pkg = info.packageName, userSerial = info.userSerial, label = info.customLabel)
-    is TileItem.Spacer  -> TileDef(TYPE_SPACER,  id, color = color)
+    is TileItem.App     -> TileDef(
+        TYPE_APP, id,
+        pkg = info.packageName, userSerial = info.userSerial, label = info.customLabel,
+        color = style.background, textColor = style.textColor, texture = style.texture,
+    )
+    is TileItem.Spacer  -> TileDef(TYPE_SPACER,  id, color = color, texture = texture)
     is TileItem.Divider -> TileDef(TYPE_DIVIDER, id, color = color)
 }
