@@ -29,10 +29,10 @@
     <string name="action_add_divider">+ Sépar.</string>
     <string name="action_settings">Réglages</string>
     <string name="action_done">Terminé</string>
-    <string name="label_columns">Col</string>
-    <string name="label_rows">Lig</string>
+    <string name="label_columns">Colonnes</string>
+    <string name="label_rows">Lignes</string>
     <string name="empty_search">Aucun résultat</string>
-    <string name="empty_hint">Appui long sur une app pour l\'épingler</string>
+    <string name="empty_hint">Appui long sur une app pour l\'épingler\nAppui long sur le vide : grille et réglages</string>
     <string name="msg_grid_full">Grille pleine — retirez une tuile ou agrandissez la grille</string>
     <string name="msg_export_success">Disposition exportée</string>
     <string name="msg_export_failed">Échec de l\'export</string>

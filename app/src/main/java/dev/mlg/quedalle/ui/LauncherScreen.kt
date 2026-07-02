@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,6 +49,7 @@ fun LauncherScreen(vm: LauncherViewModel) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     val themeMode by vm.themeMode.collectAsStateWithLifecycle()
     var sheetTileId   by remember { mutableStateOf<String?>(null) }
+    var showHomeMenu  by remember { mutableStateOf(false) }
     var isEditMode    by rememberSaveable { mutableStateOf(false) }
     var showSettings  by rememberSaveable { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
@@ -116,7 +118,8 @@ fun LauncherScreen(vm: LauncherViewModel) {
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
                 )
 
-                val swipeEnabled = state.swipeDownNotifications && !state.isSearching && !isEditMode
+                val onHome = !state.isSearching && !isEditMode
+                val swipeEnabled = state.swipeDownNotifications && onHome
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -134,6 +137,11 @@ fun LauncherScreen(vm: LauncherViewModel) {
                                     }
                                 },
                             )
+                        }
+                        .pointerInput(onHome) {
+                            if (!onHome) return@pointerInput
+                            // Long-press on empty home space opens the home menu.
+                            detectTapGestures(onLongPress = { showHomeMenu = true })
                         },
                 ) {
                     when {
@@ -179,7 +187,6 @@ fun LauncherScreen(vm: LauncherViewModel) {
                         onRowsChange    = vm::setGridRows,
                         onAddSpacer  = { vm.addSpacer(QuedalleColors.TilePresets.first(), null) },
                         onAddDivider = { vm.addDivider(QuedalleColors.DividerDefault) },
-                        onSettings   = { showSettings = true },
                         onDone       = { isEditMode = false },
                     )
                 }
@@ -208,6 +215,14 @@ fun LauncherScreen(vm: LauncherViewModel) {
                 sheetTileId = null
             },
             onDismiss = { sheetTileId = null },
+        )
+    }
+
+    if (showHomeMenu) {
+        HomeSheet(
+            onReorder  = { isEditMode = true; showHomeMenu = false },
+            onSettings = { showSettings = true; showHomeMenu = false },
+            onDismiss  = { showHomeMenu = false },
         )
     }
 }

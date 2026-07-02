@@ -3,3 +3,4 @@
 • Textures: iridescent, gradient and glass effects
 • Custom colors via HSL sliders, automatic text contrast
 • Styles included in backup export/import
+• Long-press empty space: grid editing and settings, both top-level

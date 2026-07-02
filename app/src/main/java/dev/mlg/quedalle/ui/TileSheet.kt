@@ -208,3 +208,44 @@ private fun SheetAction(label: String, color: Color = Color.Unspecified, onClick
         )
     }
 }
+
+/**
+ * Home menu, opened by long-pressing empty space on the home screen.
+ * Grid editing and settings are both top-level from here.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeSheet(
+    onReorder: () -> Unit,
+    onSettings: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val palette = LocalQuedallePalette.current
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = palette.surface,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp)
+                .padding(bottom = 16.dp)
+                .navigationBarsPadding(),
+        ) {
+            HomeSheetOption(stringResource(R.string.action_reorder), onReorder)
+            HomeSheetOption(stringResource(R.string.action_settings), onSettings)
+        }
+    }
+}
+
+@Composable
+private fun HomeSheetOption(label: String, onClick: () -> Unit) {
+    val palette = LocalQuedallePalette.current
+    TextButton(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+    ) {
+        Text(label, color = palette.textPrimary, fontSize = 14.sp, modifier = Modifier.fillMaxWidth())
+    }
+}

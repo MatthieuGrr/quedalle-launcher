@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -26,20 +27,26 @@ import androidx.compose.ui.unit.sp
 import dev.mlg.quedalle.R
 import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
 
+/**
+ * Toolbar shown in grid-edit mode: add tiles, resize the grid, done.
+ * Settings is not here — it lives in the home menu (long-press empty space).
+ */
 @Composable
 fun EditToolbar(
     columns: Int, rows: Int,
     onColumnsChange: (Int) -> Unit, onRowsChange: (Int) -> Unit,
     onAddSpacer: () -> Unit, onAddDivider: () -> Unit,
-    onSettings: () -> Unit,
     onDone: () -> Unit,
 ) {
+    val palette = LocalQuedallePalette.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(LocalQuedallePalette.current.surfaceDim),
+            .background(palette.surfaceDim),
     ) {
-        // Row 1: add buttons + settings + done
+        HorizontalDivider(color = palette.borderIdle)
+
+        // Row 1: add tiles + done
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -48,34 +55,29 @@ fun EditToolbar(
         ) {
             TextButton(
                 onClick = onAddSpacer,
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-            ) { Text(stringResource(R.string.action_add_spacer), fontSize = 12.sp) }
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+            ) { Text(stringResource(R.string.action_add_spacer), fontSize = 13.sp) }
 
             TextButton(
                 onClick = onAddDivider,
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-            ) { Text(stringResource(R.string.action_add_divider), fontSize = 12.sp) }
-
-            TextButton(
-                onClick = onSettings,
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-            ) { Text(stringResource(R.string.action_settings), fontSize = 12.sp) }
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+            ) { Text(stringResource(R.string.action_add_divider), fontSize = 13.sp) }
 
             Spacer(Modifier.weight(1f))
 
             TextButton(onClick = onDone) {
                 Text(stringResource(R.string.action_done), color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium, fontSize = 13.sp)
+                    fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
             }
         }
 
-        // Row 2: grid size controls
+        // Row 2: grid size
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                .padding(start = 16.dp, end = 16.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             StepControl(stringResource(R.string.label_columns), columns, 2, 5,  { onColumnsChange(columns - 1) }, { onColumnsChange(columns + 1) })
             StepControl(stringResource(R.string.label_rows),    rows,    1, 20, { onRowsChange(rows - 1) },       { onRowsChange(rows + 1) })
@@ -90,15 +92,15 @@ private fun StepControl(
 ) {
     val palette = LocalQuedallePalette.current
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(label, color = palette.textMuted, fontSize = 11.sp)
-        Spacer(Modifier.width(6.dp))
-        IconButton(onClick = onDec, enabled = value > min, modifier = Modifier.size(28.dp)) {
-            Text("−", color = if (value > min) palette.textStrong else palette.textDisabled, fontSize = 16.sp)
+        Text(label, color = palette.textMuted, fontSize = 12.sp)
+        Spacer(Modifier.width(8.dp))
+        IconButton(onClick = onDec, enabled = value > min, modifier = Modifier.size(34.dp)) {
+            Text("−", color = if (value > min) palette.textStrong else palette.textDisabled, fontSize = 18.sp)
         }
-        Text("$value", color = palette.textStrong, fontSize = 13.sp, fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Center, modifier = Modifier.widthIn(min = 20.dp))
-        IconButton(onClick = onInc, enabled = value < max, modifier = Modifier.size(28.dp)) {
-            Text("+", color = if (value < max) palette.textStrong else palette.textDisabled, fontSize = 16.sp)
+        Text("$value", color = palette.textStrong, fontSize = 14.sp, fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center, modifier = Modifier.widthIn(min = 22.dp))
+        IconButton(onClick = onInc, enabled = value < max, modifier = Modifier.size(34.dp)) {
+            Text("+", color = if (value < max) palette.textStrong else palette.textDisabled, fontSize = 18.sp)
         }
     }
 }

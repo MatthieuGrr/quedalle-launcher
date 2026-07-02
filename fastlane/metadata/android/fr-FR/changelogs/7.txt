@@ -3,3 +3,4 @@
 • Textures : irisé, dégradé, verre
 • Couleurs libres via sliders HSL, contraste du texte automatique
 • Styles inclus dans l'export/import
+• Appui long sur le vide : édition de grille et réglages au premier niveau
