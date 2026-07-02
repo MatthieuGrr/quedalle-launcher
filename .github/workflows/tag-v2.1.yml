@@ -1,0 +1,41 @@
+name: Tag and release v2.1
+
+# One-shot: triggered by the commit that adds this file, then removed.
+# Tags GITHUB_SHA (main HEAD): the tagged tree must have workflow files
+# identical to main, otherwise GITHUB_TOKEN is refused the ref creation.
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/tag-v2.1.yml']
+
+jobs:
+  release:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag v2.1 "$GITHUB_SHA"
+          git push origin v2.1
+
+      - name: Set Java 17
+        run: echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
+
+      - name: Build APKs
+        run: ./gradlew assembleRelease assembleDebug
+
+      - name: Create GitHub Release
+        run: |
+          gh release create v2.1 \
+            --title "Quedalle v2.1" \
+            --generate-notes \
+            app/build/outputs/apk/release/app-release-unsigned.apk \
+            app/build/outputs/apk/debug/app-debug.apk
+        env:
+          GH_TOKEN: ${{ github.token }}
