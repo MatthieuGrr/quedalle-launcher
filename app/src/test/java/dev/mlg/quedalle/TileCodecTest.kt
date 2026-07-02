@@ -1,6 +1,5 @@
 package dev.mlg.quedalle
 
-import dev.mlg.quedalle.data.DEFAULT_TILE_COLOR
 import dev.mlg.quedalle.data.LayoutBackup
 import dev.mlg.quedalle.data.TYPE_APP
 import dev.mlg.quedalle.data.TYPE_DIVIDER
@@ -53,7 +52,7 @@ class TileCodecTest {
             """{"t":"app","id":""},{"t":"unknown","id":"x"},{"t":"spacer","id":"sp_1"}]"""
         val defs = TileCodec.decode(raw)!!
         assertEquals(listOf("com.ok", "sp_1"), defs.map { it.id })
-        assertEquals(DEFAULT_TILE_COLOR, defs[1].color)
+        assertEquals(null, defs[1].color)
     }
 
     @Test

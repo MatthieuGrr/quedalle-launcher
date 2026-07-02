@@ -5,7 +5,6 @@
     <string name="action_pin">Pin</string>
     <string name="action_unpin">Unpin</string>
     <string name="action_rename">Rename</string>
-    <string name="action_appearance">Appearance</string>
     <string name="appearance_background">Background</string>
     <string name="appearance_text">Text</string>
     <string name="appearance_texture">Texture</string>
@@ -23,8 +22,6 @@
     <string name="action_app_info">App info</string>
     <string name="dialog_spacer_title">Spacer tile</string>
     <string name="dialog_divider_title">Divider</string>
-    <string name="dialog_rename_title">Rename tile</string>
-    <string name="rename_hint">Leave empty to restore the original name</string>
     <string name="action_remove">Remove</string>
     <string name="action_confirm">Confirm</string>
     <string name="action_cancel">Cancel</string>
@@ -43,6 +40,9 @@
     <string name="msg_import_failed">Import failed — invalid file</string>
     <string name="settings_title">Settings</string>
     <string name="settings_theme">Theme</string>
+    <string name="settings_tile_style">Tile style</string>
+    <string name="settings_tile_style_hint">Default look of all app tiles. Individually customized tiles keep their own style.</string>
+    <string name="settings_apply_all">Apply to customized tiles too</string>
     <string name="theme_system">System</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_light">Light</string>

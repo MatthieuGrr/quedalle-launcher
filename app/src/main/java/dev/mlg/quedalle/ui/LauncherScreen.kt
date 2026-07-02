@@ -47,13 +47,9 @@ import dev.mlg.quedalle.viewmodel.UiMessage
 fun LauncherScreen(vm: LauncherViewModel) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     val themeMode by vm.themeMode.collectAsStateWithLifecycle()
-    var longPressedTile by remember { mutableStateOf<TileItem?>(null) }
-    var renamingTile    by remember { mutableStateOf<TileItem.App?>(null) }
-    var stylingTile     by remember { mutableStateOf<TileItem?>(null) }
-    var isEditMode      by rememberSaveable { mutableStateOf(false) }
-    var showSettings    by rememberSaveable { mutableStateOf(false) }
-    var showAddSpacer   by remember { mutableStateOf(false) }
-    var showAddDivider  by remember { mutableStateOf(false) }
+    var sheetTileId   by remember { mutableStateOf<String?>(null) }
+    var isEditMode    by rememberSaveable { mutableStateOf(false) }
+    var showSettings  by rememberSaveable { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val resources = LocalResources.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -91,6 +87,11 @@ fun LauncherScreen(vm: LauncherViewModel) {
             SettingsScreen(
                 themeMode = themeMode,
                 onThemeModeChange = vm::setThemeMode,
+                globalStyle = state.globalStyle,
+                onGlobalBackground = vm::setGlobalBackground,
+                onGlobalTextColor = vm::setGlobalTextColor,
+                onGlobalTexture = vm::setGlobalTexture,
+                onApplyGlobalToAll = vm::applyGlobalStyleToAllTiles,
                 swipeDownNotifications = state.swipeDownNotifications,
                 onSwipeDownChange = vm::setSwipeDownNotifications,
                 hiddenApps = state.hiddenApps,
@@ -148,7 +149,7 @@ fun LauncherScreen(vm: LauncherViewModel) {
                                 onTileClick = { tile ->
                                     if (tile is TileItem.App) vm.launchApp(tile.info)
                                 },
-                                onTileLongClick = { longPressedTile = it },
+                                onTileLongClick = { sheetTileId = it.id },
                                 modifier = Modifier.fillMaxSize(),
                             )
 
@@ -162,7 +163,7 @@ fun LauncherScreen(vm: LauncherViewModel) {
                                     onTileClick = { tile ->
                                         if (tile is TileItem.App) vm.launchApp(tile.info)
                                     },
-                                    onTileLongClick = { longPressedTile = it },
+                                    onTileLongClick = { sheetTileId = it.id },
                                     onSaveOrder = vm::saveTileOrder,
                                     modifier = Modifier.fillMaxSize(),
                                 )
@@ -176,8 +177,8 @@ fun LauncherScreen(vm: LauncherViewModel) {
                         rows = state.gridRows,
                         onColumnsChange = vm::setGridColumns,
                         onRowsChange    = vm::setGridRows,
-                        onAddSpacer  = { showAddSpacer = true; showAddDivider = false },
-                        onAddDivider = { showAddDivider = true; showAddSpacer = false },
+                        onAddSpacer  = { vm.addSpacer(QuedalleColors.TilePresets.first(), null) },
+                        onAddDivider = { vm.addDivider(QuedalleColors.DividerDefault) },
                         onSettings   = { showSettings = true },
                         onDone       = { isEditMode = false },
                     )
@@ -191,111 +192,22 @@ fun LauncherScreen(vm: LauncherViewModel) {
         )
     }
 
-    // ── Dialogs ───────────────────────────────────────────────────────────────
-    when (val tile = longPressedTile) {
-        is TileItem.App -> {
-            val app = tile.info
-            AppOptionsDialog(
-                app = app,
-                onDismiss   = { longPressedTile = null },
-                onTogglePin = { vm.togglePin(app); longPressedTile = null },
-                onRename    = if (app.isPinned) {
-                    { renamingTile = tile; longPressedTile = null }
-                } else null,
-                onAppearance = if (app.isPinned) {
-                    { stylingTile = tile; longPressedTile = null }
-                } else null,
-                onReorder   = if (app.isPinned) {
-                    {
-                        vm.clearSearch()
-                        focusManager.clearFocus()
-                        isEditMode = true
-                        longPressedTile = null
-                    }
-                } else null,
-                onHide      = if (!app.isPinned) {
-                    { vm.hideApp(app); longPressedTile = null }
-                } else null,
-                onUninstall = if (!app.isSystemApp) {
-                    { vm.requestUninstall(app); longPressedTile = null }
-                } else null,
-                onAppInfo   = { vm.openAppInfo(app); longPressedTile = null },
-                onSettings  = {
-                    vm.clearSearch()
-                    focusManager.clearFocus()
-                    showSettings = true
-                    longPressedTile = null
-                },
-            )
-        }
-        is TileItem.Spacer -> AppearanceDialog(
-            previewLabel = null,
-            initialBackground = tile.color,
-            initialTextColor = null,
-            initialTexture = tile.texture,
-            onConfirm = { bg, _, texture ->
-                vm.updateTileAppearance(tile.id, bg, null, texture)
-                longPressedTile = null
+    // ── Tile sheet — everything about a tile in one place, applied live ──────
+    val sheetTile = sheetTileId?.let { id -> state.displayedTiles.firstOrNull { it.id == id } }
+    LaunchedEffect(sheetTile == null) {
+        if (sheetTile == null) sheetTileId = null
+    }
+    sheetTile?.let { tile ->
+        TileSheet(
+            tile = tile,
+            vm = vm,
+            onEnterEdit = {
+                vm.clearSearch()
+                focusManager.clearFocus()
+                isEditMode = true
+                sheetTileId = null
             },
-            onRemove  = { vm.removeTile(tile.id); longPressedTile = null },
-            onDismiss = { longPressedTile = null },
-        )
-        is TileItem.Divider -> TileColorDialog(
-            titleRes  = R.string.dialog_divider_title,
-            initial   = tile.color,
-            onConfirm = { color -> vm.updateTileColor(tile.id, color); longPressedTile = null },
-            onRemove  = { vm.removeTile(tile.id); longPressedTile = null },
-            onDismiss = { longPressedTile = null },
-        )
-        null -> {}
-    }
-
-    renamingTile?.let { tile ->
-        RenameDialog(
-            current  = tile.info.customLabel ?: tile.info.label,
-            original = tile.info.label,
-            onConfirm = { newLabel ->
-                vm.renameTile(tile.id, newLabel.takeIf { it != tile.info.label })
-                renamingTile = null
-            },
-            onDismiss = { renamingTile = null },
-        )
-    }
-
-    (stylingTile as? TileItem.App)?.let { tile ->
-        AppearanceDialog(
-            previewLabel = tile.info.displayLabel,
-            initialBackground = tile.style.background,
-            initialTextColor = tile.style.textColor,
-            initialTexture = tile.style.texture,
-            onConfirm = { bg, text, texture ->
-                vm.updateTileAppearance(tile.id, bg, text, texture)
-                stylingTile = null
-            },
-            onRemove  = null,
-            onDismiss = { stylingTile = null },
-        )
-    }
-
-    if (showAddSpacer) {
-        AppearanceDialog(
-            previewLabel = null,
-            initialBackground = QuedalleColors.TilePresets.first(),
-            initialTextColor = null,
-            initialTexture = null,
-            onConfirm = { bg, _, texture -> vm.addSpacer(bg, texture); showAddSpacer = false },
-            onRemove  = null,
-            onDismiss = { showAddSpacer = false },
-        )
-    }
-
-    if (showAddDivider) {
-        TileColorDialog(
-            titleRes  = R.string.dialog_divider_title,
-            initial   = QuedalleColors.DividerDefault,
-            onConfirm = { color -> vm.addDivider(color); showAddDivider = false },
-            onRemove  = null,
-            onDismiss = { showAddDivider = false },
+            onDismiss = { sheetTileId = null },
         )
     }
 }

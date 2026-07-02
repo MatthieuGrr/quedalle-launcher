@@ -1,13 +1,39 @@
 package dev.mlg.quedalle.model
 
-/** Visual customization of a tile. Defaults mean "follow the theme". */
+/** Explicit "automatic text color" override (alpha 0 — never a real color). */
+const val TEXT_COLOR_AUTO = 1
+
+/** Explicit "flat, no texture" override. */
+const val TEXTURE_NONE = "none"
+
+/**
+ * Visual customization of a tile.
+ *
+ * As an *override* (persisted per tile): null fields inherit the global
+ * style; [TEXT_COLOR_AUTO] / [TEXTURE_NONE] force auto/flat.
+ * As an *effective* style (after [mergeTileStyle]): background null means
+ * "theme card color", textColor null means automatic contrast, texture
+ * null means flat.
+ */
 data class TileStyle(
-    /** ARGB background; the TileAppColor sentinel means "theme card color". */
-    val background: Int = 0xFF141414.toInt(),
-    /** ARGB text color; null = automatic contrast against the background. */
+    val background: Int? = null,
     val textColor: Int? = null,
-    /** Texture id (see Textures); null = flat color. */
     val texture: String? = null,
+)
+
+/** Resolves a per-tile [override] against the [global] default style. */
+fun mergeTileStyle(override: TileStyle, global: TileStyle): TileStyle = TileStyle(
+    background = override.background ?: global.background,
+    textColor = when (override.textColor) {
+        null -> global.textColor
+        TEXT_COLOR_AUTO -> null
+        else -> override.textColor
+    },
+    texture = when (override.texture) {
+        null -> global.texture
+        TEXTURE_NONE -> null
+        else -> override.texture
+    },
 )
 
 sealed class TileItem {
@@ -15,7 +41,10 @@ sealed class TileItem {
 
     data class App(
         val info: AppInfo,
+        /** Effective style (override merged with the global style). */
         val style: TileStyle = TileStyle(),
+        /** Raw per-tile override, persisted as-is on reorder. */
+        val override: TileStyle = TileStyle(),
     ) : TileItem() {
         override val id: String get() = info.key
     }

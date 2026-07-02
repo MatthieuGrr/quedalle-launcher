@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import dev.mlg.quedalle.model.TileItem
 import dev.mlg.quedalle.model.fullRowFlags
 import dev.mlg.quedalle.model.gridPositions
+import dev.mlg.quedalle.ui.theme.QuedalleColors
 import dev.mlg.quedalle.ui.theme.Textures
 import dev.mlg.quedalle.ui.theme.resolveTileColor
 import dev.mlg.quedalle.ui.theme.resolveTileTextColor
@@ -204,7 +205,7 @@ private fun DividerCard(tile: TileItem.Divider, isDragging: Boolean, modifier: M
 
 @Composable
 private fun AppCard(tile: TileItem.App, isDragging: Boolean, height: Dp, modifier: Modifier) {
-    val baseBg = resolveTileColor(tile.style.background)
+    val baseBg = resolveTileColor(tile.style.background ?: QuedalleColors.TileAppColor)
     val brush = Textures.brush(tile.style.texture, baseBg)
     val bgColor by animateColorAsState(
         targetValue = if (isDragging) MaterialTheme.colorScheme.secondaryContainer

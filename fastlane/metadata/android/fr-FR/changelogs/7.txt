@@ -1,5 +1,5 @@
-• Éditeur d'apparence des tuiles : couleurs de fond et de texte (presets ou sliders HSL)
-• Textures : effets irisé, dégradé et verre — statiques, zéro coût batterie
-• Contraste du texte automatique sur fonds personnalisés
-• Les tuiles vides acceptent aussi les textures
-• Tous les choix sont inclus dans l'export/import
+• Un seul panneau à l'appui long : renommage, couleurs, texture et actions réunis, appliqués en direct
+• Style global des tuiles dans Réglages : toute la grille d'un coup, personnalisations conservées
+• Textures : irisé, dégradé, verre
+• Couleurs libres via sliders HSL, contraste du texte automatique
+• Styles inclus dans l'export/import
