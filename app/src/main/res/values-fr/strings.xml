@@ -39,6 +39,7 @@
     <string name="msg_export_failed">Échec de l\'export</string>
     <string name="msg_import_success">Disposition importée</string>
     <string name="msg_import_failed">Échec de l\'import — fichier invalide</string>
+    <string name="msg_shade_unsupported">Ouverture du volet de notifications non prise en charge sur cet appareil</string>
     <string name="settings_title">Réglages</string>
     <string name="settings_theme">Thème</string>
     <string name="settings_tile_style">Style des tuiles</string>

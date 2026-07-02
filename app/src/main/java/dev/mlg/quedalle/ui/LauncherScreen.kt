@@ -126,7 +126,8 @@ fun LauncherScreen(vm: LauncherViewModel) {
                             var fired = false
                             detectVerticalDragGestures(
                                 onDragStart = { total = 0f; fired = false },
-                                onVerticalDrag = { _, dragAmount ->
+                                onVerticalDrag = { change, dragAmount ->
+                                    change.consume()
                                     total += dragAmount
                                     if (!fired && total > 100.dp.toPx()) {
                                         fired = true
@@ -227,6 +228,7 @@ private val UiMessage.stringRes: Int
         UiMessage.EXPORT_FAILED  -> R.string.msg_export_failed
         UiMessage.IMPORT_SUCCESS -> R.string.msg_import_success
         UiMessage.IMPORT_FAILED  -> R.string.msg_import_failed
+        UiMessage.SHADE_UNSUPPORTED -> R.string.msg_shade_unsupported
     }
 
 @Composable

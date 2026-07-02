@@ -48,7 +48,7 @@ data class LauncherUiState(
     val hiddenApps: List<AppInfo> = emptyList(),
 )
 
-enum class UiMessage { GRID_FULL, EXPORT_SUCCESS, EXPORT_FAILED, IMPORT_SUCCESS, IMPORT_FAILED }
+enum class UiMessage { GRID_FULL, EXPORT_SUCCESS, EXPORT_FAILED, IMPORT_SUCCESS, IMPORT_FAILED, SHADE_UNSUPPORTED }
 
 private data class GridConfig(
     val columns: Int,
@@ -272,16 +272,22 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
 
     fun requestUninstall(app: AppInfo) = repo.requestUninstall(app)
 
-    /** Opens the system notification shade (used by the swipe-down gesture). */
+    /**
+     * Opens the system notification shade (used by the swipe-down gesture).
+     * This relies on a non-SDK API; some OEM builds block it, in which case
+     * the user is told instead of failing silently.
+     */
     @SuppressLint("WrongConstant", "PrivateApi")
     fun openNotificationShade() {
         try {
             val service = getApplication<Application>().getSystemService("statusbar")
+                ?: error("no statusbar service")
             Class.forName("android.app.StatusBarManager")
                 .getMethod("expandNotificationsPanel")
                 .invoke(service)
         } catch (e: Exception) {
             Log.w(TAG, "Cannot expand notification shade", e)
+            _messages.tryEmit(UiMessage.SHADE_UNSUPPORTED)
         }
     }
 
