@@ -147,7 +147,10 @@ fun LauncherScreen(vm: LauncherViewModel) {
                                 rows = null,
                                 editMode = false,
                                 onTileClick = { tile ->
-                                    if (tile is TileItem.App) vm.launchApp(tile.info)
+                                    if (tile is TileItem.App) {
+                                        vm.launchApp(tile.info)
+                                        focusManager.clearFocus()
+                                    }
                                 },
                                 onTileLongClick = { sheetTileId = it.id },
                                 modifier = Modifier.fillMaxSize(),

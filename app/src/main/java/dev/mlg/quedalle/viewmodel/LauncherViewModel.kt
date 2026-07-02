@@ -143,7 +143,12 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
     fun refreshApps() = repo.refresh()
 
     // ── Search ───────────────────────────────────────────────────────────────
-    fun onSearchQueryChange(query: String) { _searchQuery.value = query }
+    fun onSearchQueryChange(query: String) {
+        _searchQuery.value = query
+        // Typing always engages search, even if the field kept its focus
+        // across an app launch (no focus event would re-activate it).
+        if (query.isNotEmpty()) _isSearchActive.value = true
+    }
     fun onSearchActivated()   { _isSearchActive.value = true }
     fun onSearchDeactivated() { _isSearchActive.value = false }
     fun clearSearch() {
