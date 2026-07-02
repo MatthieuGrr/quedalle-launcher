@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -19,6 +20,12 @@ const val DEFAULT_TILE_COLOR = 0xFF141414.toInt()
 /**
  * One persisted tile. Short serial names keep the stored JSON compatible
  * with the hand-rolled format of versions <= 1.4 ("t"/"id"/"pkg"/"l"/"c").
+ *
+ * For app tiles the three style fields are *overrides* of the global tile
+ * style: null = inherit. Explicit sentinels ([TEXT_COLOR_AUTO],
+ * [TEXTURE_NONE] from the model package) mean "auto"/"flat" even when the
+ * global style says otherwise. Spacers and dividers always carry their own
+ * color (no inheritance).
  */
 @Serializable
 data class TileDef(
@@ -27,7 +34,9 @@ data class TileDef(
     @SerialName("pkg") val pkg: String? = null,
     @SerialName("u") val userSerial: Long? = null,
     @SerialName("l") val label: String? = null,
-    @SerialName("c") val color: Int = DEFAULT_TILE_COLOR,
+    @SerialName("c") val color: Int? = null,
+    @SerialName("fc") val textColor: Int? = null,
+    @SerialName("tx") val texture: String? = null,
 )
 
 fun List<TileDef>.fullRowFlags(): List<Boolean> = map { it.type == TYPE_DIVIDER }
@@ -40,6 +49,9 @@ data class LayoutBackup(
     val rows: Int,
     val swipeDownNotifications: Boolean = true,
     val theme: String = "system",
+    val globalBackground: Int? = null,
+    val globalTextColor: Int? = null,
+    val globalTexture: String? = null,
     val hidden: List<String> = emptyList(),
     val tiles: List<TileDef> = emptyList(),
 )
@@ -76,6 +88,9 @@ object TileCodec {
             rows = obj["rows"]?.jsonPrimitive?.intOrNull ?: 4,
             swipeDownNotifications = obj["swipeDownNotifications"]?.jsonPrimitive?.booleanOrNull ?: true,
             theme = obj["theme"]?.jsonPrimitive?.content ?: "system",
+            globalBackground = obj["globalBackground"]?.jsonPrimitive?.intOrNull,
+            globalTextColor = obj["globalTextColor"]?.jsonPrimitive?.intOrNull,
+            globalTexture = obj["globalTexture"]?.jsonPrimitive?.contentOrNull,
             hidden = obj["hidden"]?.jsonArray?.mapNotNull {
                 try { it.jsonPrimitive.content } catch (_: Exception) { null }
             } ?: emptyList(),

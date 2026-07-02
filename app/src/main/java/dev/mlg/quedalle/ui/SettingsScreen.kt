@@ -23,12 +23,19 @@ import dev.mlg.quedalle.BuildConfig
 import dev.mlg.quedalle.R
 import dev.mlg.quedalle.model.AppInfo
 import dev.mlg.quedalle.model.ThemeMode
+import dev.mlg.quedalle.model.TileStyle
 import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
+import dev.mlg.quedalle.ui.theme.QuedalleColors
 
 @Composable
 fun SettingsScreen(
     themeMode: ThemeMode,
     onThemeModeChange: (ThemeMode) -> Unit,
+    globalStyle: TileStyle,
+    onGlobalBackground: (Int) -> Unit,
+    onGlobalTextColor: (Int?) -> Unit,
+    onGlobalTexture: (String?) -> Unit,
+    onApplyGlobalToAll: () -> Unit,
     swipeDownNotifications: Boolean,
     onSwipeDownChange: (Boolean) -> Unit,
     hiddenApps: List<AppInfo>,
@@ -72,6 +79,29 @@ fun SettingsScreen(
                 onThemeModeChange(ThemeMode.LIGHT)
             }
         }
+
+        // ── Global tile style ─────────────────────────────────────────────────
+        SectionTitle(stringResource(R.string.settings_tile_style))
+        TilePreview(
+            label = "Aa",
+            background = globalStyle.background ?: QuedalleColors.TileAppColor,
+            textColor = globalStyle.textColor,
+            texture = globalStyle.texture,
+        )
+        AppearanceControls(
+            background = globalStyle.background ?: QuedalleColors.TileAppColor,
+            textColor = globalStyle.textColor,
+            texture = globalStyle.texture,
+            showTextSection = true,
+            onBackground = onGlobalBackground,
+            onTextColor = onGlobalTextColor,
+            onTexture = onGlobalTexture,
+        )
+        TextButton(onClick = onApplyGlobalToAll) {
+            Text(stringResource(R.string.settings_apply_all), fontSize = 12.sp)
+        }
+        Text(stringResource(R.string.settings_tile_style_hint),
+            color = palette.textMuted, fontSize = 11.sp)
 
         // ── Gestures ──────────────────────────────────────────────────────────
         Row(

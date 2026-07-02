@@ -8,13 +8,17 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import dev.mlg.quedalle.data.AppPreferences
 import dev.mlg.quedalle.data.AppRepository
+import dev.mlg.quedalle.data.DEFAULT_TILE_COLOR
 import dev.mlg.quedalle.data.TYPE_APP
 import dev.mlg.quedalle.data.TYPE_DIVIDER
 import dev.mlg.quedalle.data.TYPE_SPACER
 import dev.mlg.quedalle.data.TileDef
+import dev.mlg.quedalle.model.TEXTURE_NONE
+import dev.mlg.quedalle.model.mergeTileStyle
 import dev.mlg.quedalle.model.AppInfo
 import dev.mlg.quedalle.model.ThemeMode
 import dev.mlg.quedalle.model.TileItem
+import dev.mlg.quedalle.model.TileStyle
 import dev.mlg.quedalle.model.searchRank
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -40,12 +44,18 @@ data class LauncherUiState(
     val gridColumns: Int = AppPreferences.DEFAULT_COLUMNS,
     val gridRows: Int = AppPreferences.DEFAULT_ROWS,
     val swipeDownNotifications: Boolean = true,
+    val globalStyle: TileStyle = TileStyle(),
     val hiddenApps: List<AppInfo> = emptyList(),
 )
 
-enum class UiMessage { GRID_FULL, EXPORT_SUCCESS, EXPORT_FAILED, IMPORT_SUCCESS, IMPORT_FAILED }
+enum class UiMessage { GRID_FULL, EXPORT_SUCCESS, EXPORT_FAILED, IMPORT_SUCCESS, IMPORT_FAILED, SHADE_UNSUPPORTED }
 
-private data class GridConfig(val columns: Int, val rows: Int, val swipeDown: Boolean)
+private data class GridConfig(
+    val columns: Int,
+    val rows: Int,
+    val swipeDown: Boolean,
+    val globalStyle: TileStyle,
+)
 private data class SearchState(val query: String, val isActive: Boolean)
 
 class LauncherViewModel(app: Application) : AndroidViewModel(app) {
@@ -70,8 +80,8 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private val gridConfig: Flow<GridConfig> = combine(
-        prefs.gridColumns, prefs.gridRows, prefs.swipeDownNotifications
-    ) { cols, rows, swipe -> GridConfig(cols, rows, swipe) }
+        prefs.gridColumns, prefs.gridRows, prefs.swipeDownNotifications, prefs.globalStyle
+    ) { cols, rows, swipe, global -> GridConfig(cols, rows, swipe, global) }
 
     private val searchState: Flow<SearchState> = combine(_searchQuery, _isSearchActive) { q, a ->
         SearchState(q, a)
@@ -84,22 +94,47 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
         searchState,
         gridConfig,
     ) { apps, tileDefs, hidden, search, config ->
-        val appMap     = apps.associateBy { it.key }
-        val pinnedKeys = tileDefs.filter { it.type == TYPE_APP }.map { it.id }.toSet()
+        val appMap  = apps.associateBy { it.key }
+        val appDefs = tileDefs.filter { it.type == TYPE_APP }.associateBy { it.id }
 
         val displayedTiles = if (search.isActive) {
+            // Pinned apps keep their real style and custom label in results,
+            // so the tile sheet previews (and edits) what actually exists.
             apps.filter { it.key !in hidden }
-                .mapNotNull { app -> searchRank(app.label, search.query)?.let { rank -> rank to app } }
+                .mapNotNull { app ->
+                    val def = appDefs[app.key]
+                    val rank = listOfNotNull(
+                        searchRank(app.label, search.query),
+                        def?.label?.let { searchRank(it, search.query) },
+                    ).minOrNull()
+                    rank?.let { Triple(it, app, def) }
+                }
                 .sortedBy { it.first }
-                .map { (_, app) -> TileItem.App(app.copy(isPinned = app.key in pinnedKeys)) }
+                .map { (_, app, def) ->
+                    val override = TileStyle(def?.color, def?.textColor, def?.texture)
+                    TileItem.App(
+                        info = app.copy(isPinned = def != null, customLabel = def?.label),
+                        style = mergeTileStyle(override, config.globalStyle),
+                        override = override,
+                    )
+                }
         } else {
             tileDefs.mapNotNull { def ->
                 when (def.type) {
                     TYPE_APP     -> appMap[def.id]?.let { app ->
-                        TileItem.App(app.copy(isPinned = true, customLabel = def.label))
+                        val override = TileStyle(def.color, def.textColor, def.texture)
+                        TileItem.App(
+                            info = app.copy(isPinned = true, customLabel = def.label),
+                            style = mergeTileStyle(override, config.globalStyle),
+                            override = override,
+                        )
                     }
-                    TYPE_SPACER  -> TileItem.Spacer(def.id, def.color)
-                    TYPE_DIVIDER -> TileItem.Divider(def.id, def.color)
+                    TYPE_SPACER  -> TileItem.Spacer(
+                        def.id,
+                        def.color ?: DEFAULT_TILE_COLOR,
+                        def.texture?.takeIf { it != TEXTURE_NONE },
+                    )
+                    TYPE_DIVIDER -> TileItem.Divider(def.id, def.color ?: DEFAULT_TILE_COLOR)
                     else         -> null
                 }
             }
@@ -112,6 +147,7 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
             gridColumns = config.columns,
             gridRows    = config.rows,
             swipeDownNotifications = config.swipeDown,
+            globalStyle = config.globalStyle,
             hiddenApps = apps.filter { it.key in hidden },
         )
     }.stateIn(
@@ -123,7 +159,12 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
     fun refreshApps() = repo.refresh()
 
     // ── Search ───────────────────────────────────────────────────────────────
-    fun onSearchQueryChange(query: String) { _searchQuery.value = query }
+    fun onSearchQueryChange(query: String) {
+        _searchQuery.value = query
+        // Typing always engages search, even if the field kept its focus
+        // across an app launch (no focus event would re-activate it).
+        if (query.isNotEmpty()) _isSearchActive.value = true
+    }
     fun onSearchActivated()   { _isSearchActive.value = true }
     fun onSearchDeactivated() { _isSearchActive.value = false }
     fun clearSearch() {
@@ -146,17 +187,42 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
         launchLogged { prefs.saveTiles(tiles.map { it.toDef() }) }
     }
 
-    fun addSpacer(color: Int) {
-        launchChecked { prefs.addTile(TileDef(TYPE_SPACER, "sp_${UUID.randomUUID()}", color = color)) }
+    fun addSpacer(color: Int, texture: String?) {
+        launchChecked {
+            prefs.addTile(TileDef(TYPE_SPACER, "sp_${UUID.randomUUID()}", color = color, texture = texture))
+        }
     }
 
     fun addDivider(color: Int) {
         launchChecked { prefs.addTile(TileDef(TYPE_DIVIDER, "dv_${UUID.randomUUID()}", color = color)) }
     }
 
-    fun updateTileColor(id: String, color: Int) {
+    fun setTileBackground(id: String, color: Int) {
         launchLogged { prefs.updateTile(id) { it.copy(color = color) } }
     }
+
+    /** [TEXT_COLOR_AUTO] forces automatic contrast for this tile. */
+    fun setTileTextColor(id: String, color: Int) {
+        launchLogged { prefs.updateTile(id) { it.copy(textColor = color) } }
+    }
+
+    /** [TEXTURE_NONE] forces a flat tile. */
+    fun setTileTexture(id: String, texture: String) {
+        launchLogged { prefs.updateTile(id) { it.copy(texture = texture) } }
+    }
+
+    /** Clears all style overrides: the tile follows the global style again. */
+    fun resetTileStyle(id: String) {
+        launchLogged {
+            prefs.updateTile(id) { it.copy(color = null, textColor = null, texture = null) }
+        }
+    }
+
+    // ── Global tile style ────────────────────────────────────────────────────
+    fun setGlobalBackground(color: Int)    { launchLogged { prefs.setGlobalBackground(color) } }
+    fun setGlobalTextColor(color: Int?)    { launchLogged { prefs.setGlobalTextColor(color) } }
+    fun setGlobalTexture(texture: String?) { launchLogged { prefs.setGlobalTexture(texture) } }
+    fun applyGlobalStyleToAllTiles()       { launchLogged { prefs.applyGlobalStyleToAllTiles() } }
 
     fun removeTile(id: String) {
         launchLogged { prefs.removeTile(id) }
@@ -222,16 +288,22 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
 
     fun requestUninstall(app: AppInfo) = repo.requestUninstall(app)
 
-    /** Opens the system notification shade (used by the swipe-down gesture). */
+    /**
+     * Opens the system notification shade (used by the swipe-down gesture).
+     * This relies on a non-SDK API; some OEM builds block it, in which case
+     * the user is told instead of failing silently.
+     */
     @SuppressLint("WrongConstant", "PrivateApi")
     fun openNotificationShade() {
         try {
             val service = getApplication<Application>().getSystemService("statusbar")
+                ?: error("no statusbar service")
             Class.forName("android.app.StatusBarManager")
                 .getMethod("expandNotificationsPanel")
                 .invoke(service)
         } catch (e: Exception) {
             Log.w(TAG, "Cannot expand notification shade", e)
+            _messages.tryEmit(UiMessage.SHADE_UNSUPPORTED)
         }
     }
 
@@ -257,7 +329,11 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
 }
 
 private fun TileItem.toDef() = when (this) {
-    is TileItem.App     -> TileDef(TYPE_APP, id, pkg = info.packageName, userSerial = info.userSerial, label = info.customLabel)
-    is TileItem.Spacer  -> TileDef(TYPE_SPACER,  id, color = color)
+    is TileItem.App     -> TileDef(
+        TYPE_APP, id,
+        pkg = info.packageName, userSerial = info.userSerial, label = info.customLabel,
+        color = override.background, textColor = override.textColor, texture = override.texture,
+    )
+    is TileItem.Spacer  -> TileDef(TYPE_SPACER,  id, color = color, texture = texture)
     is TileItem.Divider -> TileDef(TYPE_DIVIDER, id, color = color)
 }

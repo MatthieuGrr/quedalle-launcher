@@ -32,7 +32,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -43,8 +45,10 @@ import androidx.compose.ui.unit.sp
 import dev.mlg.quedalle.model.TileItem
 import dev.mlg.quedalle.model.fullRowFlags
 import dev.mlg.quedalle.model.gridPositions
-import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
+import dev.mlg.quedalle.ui.theme.QuedalleColors
+import dev.mlg.quedalle.ui.theme.Textures
 import dev.mlg.quedalle.ui.theme.resolveTileColor
+import dev.mlg.quedalle.ui.theme.resolveTileTextColor
 
 internal val GridPad   = 12.dp
 internal val GridSpace = 8.dp
@@ -115,6 +119,22 @@ fun TileGrid(
             ) { tile ->
                 val isDragging = draggingKey == tile.id
 
+                // The dragged tile follows the finger (dragAcc is its offset
+                // from the cell it currently occupies); the others animate to
+                // their new position when the order changes.
+                val visualModifier = if (isDragging) {
+                    Modifier
+                        .zIndex(1f)
+                        .graphicsLayer {
+                            translationX = dragAcc.x
+                            translationY = dragAcc.y
+                            scaleX = 1.04f
+                            scaleY = 1.04f
+                        }
+                } else {
+                    Modifier.animateItem()
+                }
+
                 val gestureModifier = if (editMode) {
                     Modifier.pointerInput(tile.id, columns) {
                         detectDragGesturesAfterLongPress(
@@ -164,7 +184,7 @@ fun TileGrid(
                     )
                 }
 
-                TileCard(tile, isDragging, cellHDp, gestureModifier)
+                TileCard(tile, isDragging, cellHDp, visualModifier.then(gestureModifier))
             }
         }
     }
@@ -203,22 +223,27 @@ private fun DividerCard(tile: TileItem.Divider, isDragging: Boolean, modifier: M
 
 @Composable
 private fun AppCard(tile: TileItem.App, isDragging: Boolean, height: Dp, modifier: Modifier) {
-    val palette = LocalQuedallePalette.current
+    val baseBg = resolveTileColor(tile.style.background ?: QuedalleColors.TileAppColor)
+    val brush = Textures.brush(tile.style.texture, baseBg)
     val bgColor by animateColorAsState(
         targetValue = if (isDragging) MaterialTheme.colorScheme.secondaryContainer
-                      else palette.card,
+                      else baseBg,
         animationSpec = tween(if (isDragging) 80 else 350),
         label = "bg",
     )
     val textColor by animateColorAsState(
         targetValue = if (isDragging) MaterialTheme.colorScheme.onSecondaryContainer
-                      else palette.textPrimary,
+                      else resolveTileTextColor(tile.style, baseBg),
         animationSpec = tween(if (isDragging) 80 else 350),
         label = "text",
     )
     Box(
         modifier = modifier.fillMaxWidth().height(height)
-            .clip(RoundedCornerShape(10.dp)).background(bgColor),
+            .clip(RoundedCornerShape(10.dp))
+            .then(
+                if (!isDragging && brush != null) Modifier.background(brush)
+                else Modifier.background(bgColor)
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -237,14 +262,20 @@ private fun AppCard(tile: TileItem.App, isDragging: Boolean, height: Dp, modifie
 
 @Composable
 private fun SpacerCard(tile: TileItem.Spacer, isDragging: Boolean, height: Dp, modifier: Modifier) {
+    val baseBg = resolveTileColor(tile.color)
+    val brush = Textures.brush(tile.texture, baseBg)
     val bgColor by animateColorAsState(
         targetValue = if (isDragging) MaterialTheme.colorScheme.secondaryContainer
-                      else resolveTileColor(tile.color),
+                      else baseBg,
         animationSpec = tween(if (isDragging) 80 else 200),
         label = "bg",
     )
     Box(
         modifier = modifier.fillMaxWidth().height(height)
-            .clip(RoundedCornerShape(10.dp)).background(bgColor),
+            .clip(RoundedCornerShape(10.dp))
+            .then(
+                if (!isDragging && brush != null) Modifier.background(brush)
+                else Modifier.background(bgColor)
+            ),
     )
 }

@@ -13,10 +13,14 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import dev.mlg.quedalle.model.ThemeMode
+import dev.mlg.quedalle.model.TileStyle
+import dev.mlg.quedalle.model.alphaOf
+import dev.mlg.quedalle.model.prefersDarkText
 
 /** Semantic colors of the launcher, resolved per light/dark theme. */
 data class QuedallePalette(
@@ -101,6 +105,26 @@ fun resolveTileColor(stored: Int): Color = when (stored) {
     QuedalleColors.TileAppColor   -> LocalQuedallePalette.current.card
     QuedalleColors.DividerDefault -> LocalQuedallePalette.current.dividerLine
     else -> Color(stored)
+}
+
+/** Text colors used by the automatic contrast rule. */
+val AutoDarkText  = Color(0xFF161616)
+val AutoLightText = Color(0xFFEDEDED)
+
+/**
+ * Text color for a tile: explicit choice if set, otherwise contrast-based
+ * against the (texture-aware) background; transparent backgrounds follow
+ * the theme.
+ */
+@Composable
+fun resolveTileTextColor(style: TileStyle, resolvedBackground: Color): Color {
+    style.textColor?.let { return Color(it) }
+    val bgArgb = resolvedBackground.toArgb()
+    if (style.texture == null && alphaOf(bgArgb) < 128) {
+        return LocalQuedallePalette.current.textPrimary
+    }
+    val representative = Textures.representativeColor(style.texture, bgArgb)
+    return if (prefersDarkText(representative)) AutoDarkText else AutoLightText
 }
 
 @Composable

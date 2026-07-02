@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dev.mlg.quedalle.model.ThemeMode
+import dev.mlg.quedalle.model.TileStyle
 import dev.mlg.quedalle.model.requiredTileRows
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -27,6 +28,9 @@ class AppPreferences(private val context: Context) {
         private val KEY_HIDDEN_APPS  = stringSetPreferencesKey("hidden_apps")
         private val KEY_SWIPE_DOWN   = booleanPreferencesKey("swipe_down_notifications")
         private val KEY_THEME        = stringPreferencesKey("theme")
+        private val KEY_GLOBAL_BG    = intPreferencesKey("global_bg")
+        private val KEY_GLOBAL_FC    = intPreferencesKey("global_fc")
+        private val KEY_GLOBAL_TX    = stringPreferencesKey("global_tx")
 
         const val MIN_COLUMNS = 2
         const val MAX_COLUMNS = 5
@@ -46,6 +50,11 @@ class AppPreferences(private val context: Context) {
     val swipeDownNotifications: Flow<Boolean> = context.dataStore.data.map { it[KEY_SWIPE_DOWN] ?: true }
 
     val themeMode: Flow<ThemeMode> = context.dataStore.data.map { ThemeMode.fromKey(it[KEY_THEME]) }
+
+    /** Default style of app tiles; null fields = theme background / auto text / flat. */
+    val globalStyle: Flow<TileStyle> = context.dataStore.data.map {
+        TileStyle(it[KEY_GLOBAL_BG], it[KEY_GLOBAL_FC], it[KEY_GLOBAL_TX])
+    }
 
     /**
      * Pins or unpins an app. Pinning is refused when the grid is full.
@@ -136,6 +145,33 @@ class AppPreferences(private val context: Context) {
         context.dataStore.edit { it[KEY_THEME] = mode.key }
     }
 
+    suspend fun setGlobalBackground(color: Int) {
+        context.dataStore.edit { it[KEY_GLOBAL_BG] = color }
+    }
+
+    suspend fun setGlobalTextColor(color: Int?) {
+        context.dataStore.edit { prefs ->
+            if (color != null) prefs[KEY_GLOBAL_FC] = color else prefs.remove(KEY_GLOBAL_FC)
+        }
+    }
+
+    suspend fun setGlobalTexture(texture: String?) {
+        context.dataStore.edit { prefs ->
+            if (texture != null) prefs[KEY_GLOBAL_TX] = texture else prefs.remove(KEY_GLOBAL_TX)
+        }
+    }
+
+    /** Removes every per-tile style override so all app tiles follow the global style. */
+    suspend fun applyGlobalStyleToAllTiles() {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_TILES] = TileCodec.encode(
+                defsOf(prefs).map {
+                    if (it.type == TYPE_APP) it.copy(color = null, textColor = null, texture = null) else it
+                }
+            )
+        }
+    }
+
     suspend fun exportBackup(): String {
         val prefs = context.dataStore.data.first()
         return TileCodec.encodeBackup(
@@ -144,6 +180,9 @@ class AppPreferences(private val context: Context) {
                 rows = prefs[KEY_GRID_ROWS] ?: DEFAULT_ROWS,
                 swipeDownNotifications = prefs[KEY_SWIPE_DOWN] ?: true,
                 theme = prefs[KEY_THEME] ?: ThemeMode.SYSTEM.key,
+                globalBackground = prefs[KEY_GLOBAL_BG],
+                globalTextColor = prefs[KEY_GLOBAL_FC],
+                globalTexture = prefs[KEY_GLOBAL_TX],
                 hidden = (prefs[KEY_HIDDEN_APPS] ?: emptySet()).toList(),
                 tiles = defsOf(prefs),
             )
@@ -164,6 +203,9 @@ class AppPreferences(private val context: Context) {
             prefs[KEY_HIDDEN_APPS] = backup.hidden.toSet()
             prefs[KEY_SWIPE_DOWN] = backup.swipeDownNotifications
             prefs[KEY_THEME] = ThemeMode.fromKey(backup.theme).key
+            backup.globalBackground?.let { prefs[KEY_GLOBAL_BG] = it } ?: prefs.remove(KEY_GLOBAL_BG)
+            backup.globalTextColor?.let { prefs[KEY_GLOBAL_FC] = it } ?: prefs.remove(KEY_GLOBAL_FC)
+            backup.globalTexture?.let { prefs[KEY_GLOBAL_TX] = it } ?: prefs.remove(KEY_GLOBAL_TX)
         }
         return true
     }
