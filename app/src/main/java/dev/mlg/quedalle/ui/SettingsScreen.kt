@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
@@ -109,16 +110,18 @@ fun SettingsScreen(
         }
         if (showDialog) {
             AlertDialog(
+                containerColor = palette.surface,
+                shape = RoundedCornerShape(16.dp),
                 onDismissRequest = { showDialog = false },
-                title = { Text(stringResource(R.string.settings_apply_all_confirm_title)) },
-                text = { Text(stringResource(R.string.settings_apply_all_confirm_content)) },
+                title = { Text(stringResource(R.string.settings_apply_all_confirm_title), color = palette.textStrong) },
+                text = { Text(stringResource(R.string.settings_apply_all_confirm_content), color = palette.textPrimary) },
                 confirmButton = {
                     TextButton(onClick = {
                         showDialog = false
                         onApplyGlobalToAll()
-                    }) { Text(stringResource(R.string.generic_ok)) }
+                    }) { Text(stringResource(R.string.action_confirm)) }
                 },
-                dismissButton = { TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.generic_cancel)) } }
+                dismissButton = { TextButton(onClick = { showDialog = false }) { Text(stringResource( R.string.action_cancel)) } }
             )
         }
         Text(stringResource(R.string.settings_tile_style_hint),

@@ -2,8 +2,6 @@
 <resources>
     <string name="app_name">Quedalle</string>
     <string name="search_placeholder">Search…</string>
-    <string name="generic_ok">OK</string>
-    <string name="generic_cancel">Cancel</string>
     <string name="action_pin">Pin</string>
     <string name="action_unpin">Unpin</string>
     <string name="action_rename">Rename</string>
