@@ -7,12 +7,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -46,6 +52,8 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalQuedallePalette.current
+    var showDialog by remember { mutableStateOf(false) }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -97,8 +105,24 @@ fun SettingsScreen(
             onTextColor = onGlobalTextColor,
             onTexture = onGlobalTexture,
         )
-        TextButton(onClick = onApplyGlobalToAll) {
+        TextButton(onClick = { showDialog = true }) {
             Text(stringResource(R.string.settings_apply_all), fontSize = 12.sp)
+        }
+        if (showDialog) {
+            AlertDialog(
+                containerColor = palette.surface,
+                shape = RoundedCornerShape(16.dp),
+                onDismissRequest = { showDialog = false },
+                title = { Text(stringResource(R.string.settings_apply_all_confirm_title), color = palette.textStrong) },
+                text = { Text(stringResource(R.string.settings_apply_all_confirm_content), color = palette.textPrimary) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showDialog = false
+                        onApplyGlobalToAll()
+                    }) { Text(stringResource(R.string.action_confirm)) }
+                },
+                dismissButton = { TextButton(onClick = { showDialog = false }) { Text(stringResource( R.string.action_cancel)) } }
+            )
         }
         Text(stringResource(R.string.settings_tile_style_hint),
             color = palette.textMuted, fontSize = 11.sp)

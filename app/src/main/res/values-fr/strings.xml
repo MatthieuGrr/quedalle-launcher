@@ -45,6 +45,8 @@
     <string name="settings_tile_style">Style des tuiles</string>
     <string name="settings_tile_style_hint">Apparence par défaut de toutes les tuiles d\'apps. Les tuiles personnalisées individuellement gardent leur style.</string>
     <string name="settings_apply_all">Appliquer aussi aux tuiles personnalisées</string>
+    <string name="settings_apply_all_confirm_content">Cela écrasera toutes les tuiles personnalisées</string>
+    <string name="settings_apply_all_confirm_title">Êtes-vous sûr ?</string>
     <string name="theme_system">Système</string>
     <string name="theme_dark">Sombre</string>
     <string name="theme_light">Clair</string>
