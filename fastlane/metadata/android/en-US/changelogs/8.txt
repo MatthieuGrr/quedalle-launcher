@@ -1,0 +1,3 @@
+• Confirmation before "apply global style to all tiles" — no more accidental wipes
+• Swipe-down to open the notification shade now works on more devices
+• Thanks to @jojoharry16 for both contributions!
