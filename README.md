@@ -45,8 +45,10 @@ Or grab the APK from the [releases page](https://github.com/MatthieuGrr/quedalle
 | Permission | Why |
 |---|---|
 | `REQUEST_DELETE_PACKAGES` | Offer "Uninstall" in the app long-press menu |
+| `EXPAND_STATUS_BAR` | Open the notification shade on the optional swipe-down gesture |
 
-No internet permission, no notification access, no analytics.
+Both are `normal`-level permissions (auto-granted, read nothing). No internet
+permission, no notification access, no analytics.
 
 ## Build from source
 

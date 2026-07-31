@@ -1,0 +1,3 @@
+• Confirmation avant « appliquer le style global à toutes les tuiles » — plus d'écrasement accidentel
+• Le balayage vers le bas pour ouvrir le volet de notifications fonctionne sur plus d'appareils
+• Merci à @jojoharry16 pour ces deux contributions !
