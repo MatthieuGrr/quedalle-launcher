@@ -60,8 +60,7 @@ fun hslToArgb(h: Float, s: Float, l: Float): Int {
 }
 
 /** Opaque ARGB to HSL triple (h in [0, 360), s and l in [0, 1]). */
-fun argbToHsl(argb: Int): Triple<Float, Float, Float> {
-    val r = ((argb shr 16) and 0xFF) / 255f
+fun argbToHsl(argb: Int): Triple<Float, Float, Float> {    val r = ((argb shr 16) and 0xFF) / 255f
     val g = ((argb shr 8) and 0xFF) / 255f
     val b = (argb and 0xFF) / 255f
     val max = maxOf(r, g, b)
@@ -76,4 +75,31 @@ fun argbToHsl(argb: Int): Triple<Float, Float, Float> {
         else -> 60f * (((r - g) / delta) + 4f)
     }
     return Triple(((h % 360f) + 360f) % 360f, s.coerceIn(0f, 1f), l)
+}
+
+/** Formats an ARGB color as six uppercase hex digits, alpha dropped. */
+fun argbToHex(argb: Int): String =
+    (argb and 0x00FFFFFF).toString(16).uppercase().padStart(6, '0')
+
+/**
+ * Parses a user-typed hex color. Accepts an optional leading '#', and
+ * 3-digit shorthand (F0A), 6-digit (FF00AA) or 8-digit (AARRGGBB) forms,
+ * case-insensitive and whitespace-tolerant. Returns null when invalid;
+ * shorter forms are returned fully opaque.
+ */
+fun hexToArgb(hex: String): Int? {
+    val cleaned = hex.trim().removePrefix("#")
+    if (cleaned.any { it !in "0123456789abcdefABCDEF" }) return null
+    val expanded = when (cleaned.length) {
+        3 -> cleaned.map { "$it$it" }.joinToString("")
+        6 -> cleaned
+        8 -> cleaned
+        else -> return null
+    }
+    return try {
+        val value = expanded.toLong(16)
+        if (expanded.length == 8) value.toInt() else (0xFF000000L or value).toInt()
+    } catch (_: NumberFormatException) {
+        null
+    }
 }

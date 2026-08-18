@@ -13,7 +13,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -30,14 +35,19 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.mlg.quedalle.R
 import dev.mlg.quedalle.model.TileStyle
+import dev.mlg.quedalle.model.argbToHex
 import dev.mlg.quedalle.model.argbToHsl
+import dev.mlg.quedalle.model.hexToArgb
 import dev.mlg.quedalle.model.hslToArgb
 import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
 import dev.mlg.quedalle.ui.theme.QuedalleColors
@@ -81,7 +91,7 @@ fun AppearanceControls(
             },
         )
         if (customSlot == CustomSlot.BACKGROUND) {
-            HslSliders(initial = background, onColor = onBackground)
+            CustomColorEditor(initial = background, onColor = onBackground)
         }
 
         if (showTextSection) {
@@ -106,7 +116,7 @@ fun AppearanceControls(
                 },
             )
             if (customSlot == CustomSlot.TEXT) {
-                HslSliders(initial = textColor ?: 0xFFEDEDED.toInt(), onColor = onTextColor)
+                CustomColorEditor(initial = textColor ?: 0xFFEDEDED.toInt(), onColor = onTextColor)
             }
         }
 
@@ -273,16 +283,71 @@ private fun CustomColorToggle(expanded: Boolean, onToggle: () -> Unit) {
     }
 }
 
+/**
+ * Free color entry: a hex field and HSL sliders kept in sync — moving a
+ * slider rewrites the hex, typing a valid hex moves the sliders. Both push
+ * the color out immediately.
+ */
 @Composable
-private fun HslSliders(initial: Int, onColor: (Int) -> Unit) {
+private fun CustomColorEditor(initial: Int, onColor: (Int) -> Unit) {
+    val palette = LocalQuedallePalette.current
     var hsl by remember { mutableStateOf(argbToHsl(initial)) }
+    var hexText by remember { mutableStateOf(argbToHex(initial)) }
     val (h, s, l) = hsl
+
+    fun applyHsl(newHsl: Triple<Float, Float, Float>) {
+        hsl = newHsl
+        val argb = hslToArgb(newHsl.first, newHsl.second, newHsl.third)
+        hexText = argbToHex(argb)
+        onColor(argb)
+    }
+
     Column {
-        HslSliderRow("H", h, 0f..360f) { hsl = Triple(it, s, l); onColor(hslToArgb(it, s, l)) }
-        HslSliderRow("S", s, 0f..1f)   { hsl = Triple(h, it, l); onColor(hslToArgb(h, it, l)) }
-        HslSliderRow("L", l, 0f..1f)   { hsl = Triple(h, s, it); onColor(hslToArgb(h, s, it)) }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 4.dp),
+        ) {
+            Text("#", color = palette.textMuted, fontSize = 14.sp,
+                modifier = Modifier.padding(end = 6.dp))
+            OutlinedTextField(
+                value = hexText,
+                onValueChange = { input ->
+                    // Only hex digits can be typed; parse as soon as it's valid.
+                    val filtered = input.filter { it in HEX_DIGITS }.take(8).uppercase()
+                    hexText = filtered
+                    hexToArgb(filtered)?.let { argb ->
+                        hsl = argbToHsl(argb)
+                        onColor(argb)
+                    }
+                },
+                singleLine = true,
+                isError = hexText.isNotEmpty() && hexToArgb(hexText) == null,
+                placeholder = { Text("RRGGBB", color = palette.textMuted, fontSize = 13.sp) },
+                textStyle = LocalTextStyle.current.copy(
+                    fontSize = 13.sp,
+                    fontFamily = FontFamily.Monospace,
+                ),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Characters,
+                    imeAction = ImeAction.Done,
+                ),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor     = palette.textStrong,
+                    unfocusedTextColor   = palette.textStrong,
+                    focusedBorderColor   = palette.borderFocused,
+                    unfocusedBorderColor = palette.borderIdle,
+                    cursorColor          = palette.textStrong,
+                ),
+                modifier = Modifier.width(168.dp),
+            )
+        }
+        HslSliderRow("H", h, 0f..360f) { applyHsl(Triple(it, s, l)) }
+        HslSliderRow("S", s, 0f..1f)   { applyHsl(Triple(h, it, l)) }
+        HslSliderRow("L", l, 0f..1f)   { applyHsl(Triple(h, s, it)) }
     }
 }
+
+private const val HEX_DIGITS = "0123456789abcdefABCDEF"
 
 @Composable
 private fun HslSliderRow(

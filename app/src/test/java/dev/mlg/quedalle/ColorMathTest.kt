@@ -1,13 +1,16 @@
 package dev.mlg.quedalle
 
 import dev.mlg.quedalle.model.alphaOf
+import dev.mlg.quedalle.model.argbToHex
 import dev.mlg.quedalle.model.argbToHsl
 import dev.mlg.quedalle.model.blendArgb
+import dev.mlg.quedalle.model.hexToArgb
 import dev.mlg.quedalle.model.hslToArgb
 import dev.mlg.quedalle.model.prefersDarkText
 import dev.mlg.quedalle.model.relativeLuminance
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -62,5 +65,41 @@ class ColorMathTest {
     @Test
     fun `hsl wraps hue`() {
         assertEquals(hslToArgb(0f, 1f, 0.5f), hslToArgb(360f, 1f, 0.5f))
+    }
+
+    @Test
+    fun `hex formatting drops alpha and pads`() {
+        assertEquals("FF00AA", argbToHex(0xFFFF00AA.toInt()))
+        assertEquals("000000", argbToHex(0xFF000000.toInt()))
+        assertEquals("0F4C81", argbToHex(0xFF0F4C81.toInt()))
+        assertEquals("00000A", argbToHex(0xFF00000A.toInt()))
+    }
+
+    @Test
+    fun `hex parsing accepts the usual forms`() {
+        val expected = 0xFFFF00AA.toInt()
+        assertEquals(expected, hexToArgb("FF00AA"))
+        assertEquals(expected, hexToArgb("#FF00AA"))
+        assertEquals(expected, hexToArgb("ff00aa"))
+        assertEquals(expected, hexToArgb("  #FF00AA  "))
+        assertEquals(expected, hexToArgb("F0A"))          // shorthand
+        assertEquals(expected, hexToArgb("FFFF00AA"))     // explicit alpha
+    }
+
+    @Test
+    fun `hex parsing rejects invalid input`() {
+        assertNull(hexToArgb(""))
+        assertNull(hexToArgb("#"))
+        assertNull(hexToArgb("GG0000"))
+        assertNull(hexToArgb("FF00"))      // wrong length
+        assertNull(hexToArgb("FF00AAB"))   // wrong length
+        assertNull(hexToArgb("nope"))
+    }
+
+    @Test
+    fun `hex round trip`() {
+        for (argb in listOf(0xFF141414.toInt(), 0xFF0F4C81.toInt(), 0xFFFFFFFF.toInt(), 0xFF7A5A10.toInt())) {
+            assertEquals(argb, hexToArgb(argbToHex(argb)))
+        }
     }
 }

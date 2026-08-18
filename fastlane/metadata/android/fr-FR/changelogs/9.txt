@@ -1,0 +1,1 @@
+• Les couleurs personnalisées s'entrent aussi en code hexadécimal (#RRGGBB), en plus des sliders HSL — les deux restent synchronisés

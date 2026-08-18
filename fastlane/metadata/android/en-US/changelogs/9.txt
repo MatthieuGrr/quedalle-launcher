@@ -1,0 +1,1 @@
+• Custom colors can now be entered as a hex code (#RRGGBB) alongside the HSL sliders — both stay in sync
