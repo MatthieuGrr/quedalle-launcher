@@ -43,6 +43,8 @@ import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
 import dev.mlg.quedalle.ui.theme.QuedalleColors
 import dev.mlg.quedalle.ui.theme.Textures
 import dev.mlg.quedalle.ui.theme.resolveTileColor
+import dev.mlg.quedalle.ui.theme.tileLabelAlignment
+import dev.mlg.quedalle.ui.theme.tileLabelStyle
 import dev.mlg.quedalle.ui.theme.resolveTileTextColor
 
 private enum class CustomSlot { BACKGROUND, TEXT }
@@ -126,18 +128,15 @@ fun TilePreview(label: String?, background: Int, textColor: Int?, texture: Strin
                 .size(width = 128.dp, height = 64.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .then(if (brush != null) Modifier.background(brush) else Modifier.background(base)),
-            contentAlignment = Alignment.Center,
+            contentAlignment = tileLabelAlignment(),
         ) {
             if (label != null) {
                 Text(
                     text = label,
-                    color = resolveTileTextColor(TileStyle(background, textColor, texture), base),
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium,
+                    style = tileLabelStyle(resolveTileTextColor(TileStyle(background, textColor, texture), base)),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 6.dp),
+                    modifier = Modifier.padding(horizontal = 8.dp),
                 )
             }
         }

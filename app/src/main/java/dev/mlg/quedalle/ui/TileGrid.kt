@@ -48,6 +48,8 @@ import dev.mlg.quedalle.model.gridPositions
 import dev.mlg.quedalle.ui.theme.QuedalleColors
 import dev.mlg.quedalle.ui.theme.Textures
 import dev.mlg.quedalle.ui.theme.resolveTileColor
+import dev.mlg.quedalle.ui.theme.tileLabelAlignment
+import dev.mlg.quedalle.ui.theme.tileLabelStyle
 import dev.mlg.quedalle.ui.theme.resolveTileTextColor
 
 internal val GridPad   = 12.dp
@@ -244,18 +246,14 @@ private fun AppCard(tile: TileItem.App, isDragging: Boolean, height: Dp, modifie
                 if (!isDragging && brush != null) Modifier.background(brush)
                 else Modifier.background(bgColor)
             ),
-        contentAlignment = Alignment.Center,
+        contentAlignment = tileLabelAlignment(),
     ) {
         Text(
             text = tile.info.displayLabel,
-            color = textColor,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Medium,
+            style = tileLabelStyle(textColor),
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
-            lineHeight = 14.sp,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
         )
     }
 }

@@ -56,6 +56,8 @@ import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
 import dev.mlg.quedalle.ui.theme.QuedalleColors
 import dev.mlg.quedalle.ui.theme.Textures
 import dev.mlg.quedalle.ui.theme.resolveTileColor
+import dev.mlg.quedalle.ui.theme.tileLabelAlignment
+import dev.mlg.quedalle.ui.theme.tileLabelStyle
 import dev.mlg.quedalle.ui.theme.resolveTileTextColor
 import dev.mlg.quedalle.viewmodel.LauncherViewModel
 
@@ -135,24 +137,13 @@ private fun AppSheetContent(
                         name = it
                         vm.renameTile(tile.id, it.takeIf { text -> text.isNotBlank() && text != app.label })
                     },
-                    textStyle = TextStyle(
-                        color = previewText,
-                        fontSize = 12.sp,
-                        lineHeight = 15.sp,
-                        fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Center,
-                    ),
+                    textStyle = tileLabelStyle(previewText),
                     cursorBrush = SolidColor(previewText),
                     maxLines = 2,
                     decorationBox = { innerTextField ->
-                        Box(contentAlignment = Alignment.Center) {
+                        Box(contentAlignment = tileLabelAlignment()) {
                             if (name.isEmpty()) {
-                                Text(
-                                    app.label,
-                                    color = previewText.copy(alpha = 0.4f),
-                                    fontSize = 12.sp,
-                                    textAlign = TextAlign.Center,
-                                )
+                                Text(app.label, style = tileLabelStyle(previewText.copy(alpha = 0.4f)))
                             }
                             innerTextField()
                         }
@@ -162,14 +153,10 @@ private fun AppSheetContent(
             } else {
                 Text(
                     text = if (name.isBlank()) app.label else name,
-                    color = previewText,
-                    fontSize = 12.sp,
-                    lineHeight = 15.sp,
-                    fontWeight = FontWeight.Medium,
+                    style = tileLabelStyle(previewText),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 24.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
                 )
             }
         }

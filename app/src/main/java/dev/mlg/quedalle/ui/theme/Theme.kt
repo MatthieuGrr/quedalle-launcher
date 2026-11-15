@@ -1,5 +1,12 @@
 package dev.mlg.quedalle.ui.theme
 
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
+import dev.mlg.quedalle.model.TileText
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -81,6 +88,27 @@ val LightPalette = QuedallePalette(
 )
 
 val LocalQuedallePalette = staticCompositionLocalOf { DarkPalette }
+
+/** Launcher-wide label settings (size, alignment, weight) of the tiles. */
+val LocalTileText = compositionLocalOf { TileText() }
+
+/** Text style of a tile label, following [LocalTileText]. */
+@Composable
+fun tileLabelStyle(color: Color): TextStyle {
+    val text = LocalTileText.current
+    return TextStyle(
+        color = color,
+        fontSize = text.sizeSp.sp,
+        lineHeight = (text.sizeSp * 1.27f).sp,
+        fontWeight = if (text.bold) FontWeight.Bold else FontWeight.Medium,
+        textAlign = if (text.alignStart) TextAlign.Start else TextAlign.Center,
+    )
+}
+
+/** Where a label sits in its tile, following [LocalTileText]. */
+@Composable
+fun tileLabelAlignment(): Alignment =
+    if (LocalTileText.current.alignStart) Alignment.CenterStart else Alignment.Center
 
 /** Stored tile colors with special meanings and the preset swatches. */
 object QuedalleColors {

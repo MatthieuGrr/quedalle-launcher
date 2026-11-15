@@ -17,6 +17,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -39,6 +40,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.mlg.quedalle.R
 import dev.mlg.quedalle.model.TileItem
 import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
+import dev.mlg.quedalle.ui.theme.LocalTileText
+import dev.mlg.quedalle.viewmodel.LauncherUiState
 import dev.mlg.quedalle.ui.theme.QuedalleColors
 import dev.mlg.quedalle.viewmodel.LauncherViewModel
 import dev.mlg.quedalle.viewmodel.UiMessage
@@ -46,6 +49,13 @@ import dev.mlg.quedalle.viewmodel.UiMessage
 @Composable
 fun LauncherScreen(vm: LauncherViewModel) {
     val state by vm.uiState.collectAsStateWithLifecycle()
+    CompositionLocalProvider(LocalTileText provides state.tileText) {
+        LauncherContent(vm, state)
+    }
+}
+
+@Composable
+private fun LauncherContent(vm: LauncherViewModel, state: LauncherUiState) {
     val themeMode by vm.themeMode.collectAsStateWithLifecycle()
     var sheetTileId   by remember { mutableStateOf<String?>(null) }
     var isEditMode    by rememberSaveable { mutableStateOf(false) }
@@ -92,6 +102,8 @@ fun LauncherScreen(vm: LauncherViewModel) {
                 onGlobalTextColor = vm::setGlobalTextColor,
                 onGlobalTexture = vm::setGlobalTexture,
                 onApplyGlobalToAll = vm::applyGlobalStyleToAllTiles,
+                tileText = state.tileText,
+                onTileText = vm::setTileText,
                 swipeDownNotifications = state.swipeDownNotifications,
                 onSwipeDownChange = vm::setSwipeDownNotifications,
                 hiddenApps = state.hiddenApps,
@@ -228,6 +240,7 @@ fun LauncherScreen(vm: LauncherViewModel) {
 private val UiMessage.stringRes: Int
     get() = when (this) {
         UiMessage.GRID_FULL      -> R.string.msg_grid_full
+        UiMessage.LAUNCH_FAILED  -> R.string.msg_launch_failed
         UiMessage.EXPORT_SUCCESS -> R.string.msg_export_success
         UiMessage.EXPORT_FAILED  -> R.string.msg_export_failed
         UiMessage.IMPORT_SUCCESS -> R.string.msg_import_success

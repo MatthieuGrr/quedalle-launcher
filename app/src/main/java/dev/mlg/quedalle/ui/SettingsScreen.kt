@@ -11,11 +11,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -30,6 +32,8 @@ import dev.mlg.quedalle.R
 import dev.mlg.quedalle.model.AppInfo
 import dev.mlg.quedalle.model.ThemeMode
 import dev.mlg.quedalle.model.TileStyle
+import dev.mlg.quedalle.model.TileText
+import kotlin.math.roundToInt
 import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
 import dev.mlg.quedalle.ui.theme.QuedalleColors
 
@@ -42,6 +46,8 @@ fun SettingsScreen(
     onGlobalTextColor: (Int?) -> Unit,
     onGlobalTexture: (String?) -> Unit,
     onApplyGlobalToAll: () -> Unit,
+    tileText: TileText,
+    onTileText: (TileText) -> Unit,
     swipeDownNotifications: Boolean,
     onSwipeDownChange: (Boolean) -> Unit,
     hiddenApps: List<AppInfo>,
@@ -127,6 +133,26 @@ fun SettingsScreen(
         Text(stringResource(R.string.settings_tile_style_hint),
             color = palette.textMuted, fontSize = 11.sp)
 
+        // ── Tile labels ───────────────────────────────────────────────────────
+        SectionTitle(stringResource(R.string.settings_tile_text))
+        TextSizeSlider(tileText.sizeSp) { onTileText(tileText.copy(sizeSp = it)) }
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            ThemeOption(stringResource(R.string.text_align_center), !tileText.alignStart) {
+                onTileText(tileText.copy(alignStart = false))
+            }
+            ThemeOption(stringResource(R.string.text_align_start), tileText.alignStart) {
+                onTileText(tileText.copy(alignStart = true))
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            ThemeOption(stringResource(R.string.text_weight_normal), !tileText.bold) {
+                onTileText(tileText.copy(bold = false))
+            }
+            ThemeOption(stringResource(R.string.text_weight_bold), tileText.bold) {
+                onTileText(tileText.copy(bold = true))
+            }
+        }
+
         // ── Gestures ──────────────────────────────────────────────────────────
         Row(
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp),
@@ -179,6 +205,27 @@ fun SettingsScreen(
             color = palette.textFaint, fontSize = 11.sp,
             modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
         )
+    }
+}
+
+/** The slider moves freely; the size is only stored when it lands on a new step. */
+@Composable
+private fun TextSizeSlider(sizeSp: Int, onChange: (Int) -> Unit) {
+    val palette = LocalQuedallePalette.current
+    var position by remember(sizeSp) { mutableFloatStateOf(sizeSp.toFloat()) }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(stringResource(R.string.text_size), color = palette.textPrimary, fontSize = 13.sp)
+        Slider(
+            value = position,
+            onValueChange = {
+                position = it
+                val step = it.roundToInt()
+                if (step != sizeSp) onChange(step)
+            },
+            valueRange = TileText.MIN_SIZE_SP.toFloat()..TileText.MAX_SIZE_SP.toFloat(),
+            modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
+        )
+        Text("$sizeSp", color = palette.textMuted, fontSize = 13.sp)
     }
 }
 

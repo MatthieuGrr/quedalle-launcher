@@ -19,6 +19,7 @@ import dev.mlg.quedalle.model.AppInfo
 import dev.mlg.quedalle.model.ThemeMode
 import dev.mlg.quedalle.model.TileItem
 import dev.mlg.quedalle.model.TileStyle
+import dev.mlg.quedalle.model.TileText
 import dev.mlg.quedalle.model.searchRank
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -48,18 +49,20 @@ data class LauncherUiState(
     val gridRows: Int = AppPreferences.DEFAULT_ROWS,
     val swipeDownNotifications: Boolean = true,
     val globalStyle: TileStyle = TileStyle(),
+    val tileText: TileText = TileText(),
     val hiddenApps: List<AppInfo> = emptyList(),
     /** True until the installed apps have been read once. */
     val isLoading: Boolean = false,
 )
 
-enum class UiMessage { GRID_FULL, EXPORT_SUCCESS, EXPORT_FAILED, IMPORT_SUCCESS, IMPORT_FAILED, SHADE_UNSUPPORTED }
+enum class UiMessage { GRID_FULL, LAUNCH_FAILED, EXPORT_SUCCESS, EXPORT_FAILED, IMPORT_SUCCESS, IMPORT_FAILED, SHADE_UNSUPPORTED }
 
 private data class GridConfig(
     val columns: Int,
     val rows: Int,
     val swipeDown: Boolean,
     val globalStyle: TileStyle,
+    val tileText: TileText,
 )
 private data class SearchState(val query: String, val isActive: Boolean)
 
@@ -88,8 +91,8 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     private val gridConfig: Flow<GridConfig> = combine(
-        prefs.gridColumns, prefs.gridRows, prefs.swipeDownNotifications, prefs.globalStyle
-    ) { cols, rows, swipe, global -> GridConfig(cols, rows, swipe, global) }
+        prefs.gridColumns, prefs.gridRows, prefs.swipeDownNotifications, prefs.globalStyle, prefs.tileText,
+    ) { cols, rows, swipe, global, text -> GridConfig(cols, rows, swipe, global, text) }
 
     private val searchState: Flow<SearchState> = combine(_searchQuery, _isSearchActive) { q, a ->
         SearchState(q, a)
@@ -157,6 +160,7 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
             gridRows    = config.rows,
             swipeDownNotifications = config.swipeDown,
             globalStyle = config.globalStyle,
+            tileText = config.tileText,
             hiddenApps = apps.filter { it.key in hidden },
             isLoading = loadedApps == null,
         )
@@ -250,6 +254,7 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
     fun setGlobalTextColor(color: Int?)    { launchLogged { prefs.setGlobalTextColor(color) } }
     fun setGlobalTexture(texture: String?) { launchLogged { prefs.setGlobalTexture(texture) } }
     fun applyGlobalStyleToAllTiles()       { launchLogged { prefs.applyGlobalStyleToAllTiles() } }
+    fun setTileText(text: TileText)        { launchLogged { prefs.setTileText(text) } }
 
     fun removeTile(id: String) {
         launchLogged { prefs.removeTile(id) }
@@ -307,7 +312,7 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
 
     // ── App actions ──────────────────────────────────────────────────────────
     fun launchApp(app: AppInfo) {
-        repo.launchApp(app)
+        if (!repo.launchApp(app)) _messages.tryEmit(UiMessage.LAUNCH_FAILED)
         if (_isSearchActive.value) clearSearch()
     }
 

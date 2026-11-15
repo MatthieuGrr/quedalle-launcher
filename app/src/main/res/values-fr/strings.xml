@@ -59,4 +59,11 @@
     <string name="settings_hidden_apps">Applications masquées</string>
     <string name="settings_hidden_none">Aucune application masquée. Appui long sur une app dans la recherche pour la masquer.</string>
     <string name="settings_version">Quedalle %1$s</string>
+    <string name="msg_launch_failed">Impossible d\'ouvrir cette application</string>
+    <string name="settings_tile_text">Texte des tuiles</string>
+    <string name="text_size">Taille</string>
+    <string name="text_align_center">Centré</string>
+    <string name="text_align_start">Aligné à gauche</string>
+    <string name="text_weight_normal">Normal</string>
+    <string name="text_weight_bold">Gras</string>
 </resources>

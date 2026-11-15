@@ -8,6 +8,7 @@ import dev.mlg.quedalle.data.TYPE_APP
 import dev.mlg.quedalle.data.TYPE_DIVIDER
 import dev.mlg.quedalle.data.TYPE_SPACER
 import dev.mlg.quedalle.data.TileDef
+import dev.mlg.quedalle.model.TileText
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -139,5 +140,25 @@ class AppPreferencesTest {
         pin("a")
         assertFalse(prefs.importBackup("not json"))
         assertEquals(listOf("a"), ids())
+    }
+
+    @Test
+    fun `tile text is clamped, stored and carried by backups`() = runBlocking {
+        assertEquals(TileText(), prefs.tileText.first())
+        prefs.setTileText(TileText(sizeSp = 99, alignStart = true, bold = true))
+        val stored = TileText(sizeSp = TileText.MAX_SIZE_SP, alignStart = true, bold = true)
+        assertEquals(stored, prefs.tileText.first())
+
+        val backup = prefs.exportBackup()
+        prefs.setTileText(TileText())
+        assertTrue(prefs.importBackup(backup))
+        assertEquals(stored, prefs.tileText.first())
+    }
+
+    @Test
+    fun `backup from an older version resets tile text to defaults`() = runBlocking {
+        prefs.setTileText(TileText(sizeSp = 16, bold = true))
+        assertTrue(prefs.importBackup("""{"columns":3,"rows":4,"tiles":[]}"""))
+        assertEquals(TileText(), prefs.tileText.first())
     }
 }

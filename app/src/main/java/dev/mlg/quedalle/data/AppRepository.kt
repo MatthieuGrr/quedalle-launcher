@@ -111,12 +111,13 @@ class AppRepository(private val context: Context) {
         false
     }
 
-    fun launchApp(app: AppInfo) {
-        try {
-            launcherApps.startMainActivity(app.componentName, app.user, null, null)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to launch ${app.packageName}", e)
-        }
+    /** @return false when the app could not be started. */
+    fun launchApp(app: AppInfo): Boolean = try {
+        launcherApps.startMainActivity(app.componentName, app.user, null, null)
+        true
+    } catch (e: Exception) {
+        Log.e(TAG, "Failed to launch ${app.packageName}", e)
+        false
     }
 
     fun openAppInfo(app: AppInfo) {

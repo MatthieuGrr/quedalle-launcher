@@ -59,4 +59,11 @@
     <string name="settings_hidden_apps">Hidden apps</string>
     <string name="settings_hidden_none">No hidden apps. Long-press an app in search results to hide it.</string>
     <string name="settings_version">Quedalle %1$s</string>
+    <string name="msg_launch_failed">Could not open this app</string>
+    <string name="settings_tile_text">Tile text</string>
+    <string name="text_size">Size</string>
+    <string name="text_align_center">Centered</string>
+    <string name="text_align_start">Left-aligned</string>
+    <string name="text_weight_normal">Normal</string>
+    <string name="text_weight_bold">Bold</string>
 </resources>

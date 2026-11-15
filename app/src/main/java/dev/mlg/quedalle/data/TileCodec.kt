@@ -65,6 +65,9 @@ data class LayoutBackup(
     val globalBackground: Int? = null,
     val globalTextColor: Int? = null,
     val globalTexture: String? = null,
+    val tileTextSize: Int? = null,
+    val tileTextAlign: String? = null,
+    val tileTextBold: Boolean? = null,
     val hidden: List<String> = emptyList(),
     val tiles: List<TileDef> = emptyList(),
 )
@@ -104,6 +107,9 @@ object TileCodec {
             globalBackground = obj["globalBackground"]?.jsonPrimitive?.intOrNull,
             globalTextColor = obj["globalTextColor"]?.jsonPrimitive?.intOrNull,
             globalTexture = obj["globalTexture"]?.jsonPrimitive?.contentOrNull,
+            tileTextSize = obj["tileTextSize"]?.jsonPrimitive?.intOrNull,
+            tileTextAlign = obj["tileTextAlign"]?.jsonPrimitive?.contentOrNull,
+            tileTextBold = obj["tileTextBold"]?.jsonPrimitive?.booleanOrNull,
             hidden = obj["hidden"]?.jsonArray?.mapNotNull {
                 try { it.jsonPrimitive.content } catch (_: Exception) { null }
             } ?: emptyList(),

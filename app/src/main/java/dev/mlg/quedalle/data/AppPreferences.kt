@@ -11,6 +11,7 @@ import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dev.mlg.quedalle.model.ThemeMode
 import dev.mlg.quedalle.model.TileStyle
+import dev.mlg.quedalle.model.TileText
 import dev.mlg.quedalle.model.requiredTileRows
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -33,6 +34,9 @@ class AppPreferences(private val store: DataStore<Preferences>) {
         private val KEY_GLOBAL_BG    = intPreferencesKey("global_bg")
         private val KEY_GLOBAL_FC    = intPreferencesKey("global_fc")
         private val KEY_GLOBAL_TX    = stringPreferencesKey("global_tx")
+        private val KEY_TEXT_SIZE    = intPreferencesKey("text_size")
+        private val KEY_TEXT_ALIGN   = stringPreferencesKey("text_align")
+        private val KEY_TEXT_BOLD    = booleanPreferencesKey("text_bold")
 
         const val MIN_COLUMNS = 2
         const val MAX_COLUMNS = 5
@@ -56,6 +60,10 @@ class AppPreferences(private val store: DataStore<Preferences>) {
     /** Default style of app tiles; null fields = theme background / auto text / flat. */
     val globalStyle: Flow<TileStyle> = store.data.map {
         TileStyle(it[KEY_GLOBAL_BG], it[KEY_GLOBAL_FC], it[KEY_GLOBAL_TX])
+    }
+
+    val tileText: Flow<TileText> = store.data.map {
+        TileText.of(it[KEY_TEXT_SIZE], it[KEY_TEXT_ALIGN], it[KEY_TEXT_BOLD])
     }
 
     /**
@@ -173,6 +181,15 @@ class AppPreferences(private val store: DataStore<Preferences>) {
         }
     }
 
+    suspend fun setTileText(text: TileText) {
+        val valid = TileText.of(text.sizeSp, text.alignKey, text.bold)
+        store.edit { prefs ->
+            prefs[KEY_TEXT_SIZE] = valid.sizeSp
+            prefs[KEY_TEXT_ALIGN] = valid.alignKey
+            prefs[KEY_TEXT_BOLD] = valid.bold
+        }
+    }
+
     /** Removes every per-tile style override so all app tiles follow the global style. */
     suspend fun applyGlobalStyleToAllTiles() {
         store.edit { prefs ->
@@ -195,6 +212,9 @@ class AppPreferences(private val store: DataStore<Preferences>) {
                 globalBackground = prefs[KEY_GLOBAL_BG],
                 globalTextColor = prefs[KEY_GLOBAL_FC],
                 globalTexture = prefs[KEY_GLOBAL_TX],
+                tileTextSize = prefs[KEY_TEXT_SIZE],
+                tileTextAlign = prefs[KEY_TEXT_ALIGN],
+                tileTextBold = prefs[KEY_TEXT_BOLD],
                 hidden = (prefs[KEY_HIDDEN_APPS] ?: emptySet()).toList(),
                 tiles = defsOf(prefs),
             )
@@ -218,6 +238,10 @@ class AppPreferences(private val store: DataStore<Preferences>) {
             backup.globalBackground?.let { prefs[KEY_GLOBAL_BG] = it } ?: prefs.remove(KEY_GLOBAL_BG)
             backup.globalTextColor?.let { prefs[KEY_GLOBAL_FC] = it } ?: prefs.remove(KEY_GLOBAL_FC)
             backup.globalTexture?.let { prefs[KEY_GLOBAL_TX] = it } ?: prefs.remove(KEY_GLOBAL_TX)
+            val text = TileText.of(backup.tileTextSize, backup.tileTextAlign, backup.tileTextBold)
+            prefs[KEY_TEXT_SIZE] = text.sizeSp
+            prefs[KEY_TEXT_ALIGN] = text.alignKey
+            prefs[KEY_TEXT_BOLD] = text.bold
         }
         return true
     }
