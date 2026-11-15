@@ -18,7 +18,9 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "launcher_prefs")
 
-class AppPreferences(private val context: Context) {
+class AppPreferences(private val store: DataStore<Preferences>) {
+
+    constructor(context: Context) : this(context.dataStore)
 
     companion object {
         private val KEY_ORDERED_PINS = stringPreferencesKey("ordered_pins") // legacy — read only
@@ -40,19 +42,19 @@ class AppPreferences(private val context: Context) {
         const val DEFAULT_ROWS = 4
     }
 
-    val tileDefinitions: Flow<List<TileDef>> = context.dataStore.data.map { defsOf(it) }
+    val tileDefinitions: Flow<List<TileDef>> = store.data.map { defsOf(it) }
 
-    val gridColumns: Flow<Int> = context.dataStore.data.map { it[KEY_GRID_COLUMNS] ?: DEFAULT_COLUMNS }
-    val gridRows: Flow<Int>    = context.dataStore.data.map { it[KEY_GRID_ROWS]    ?: DEFAULT_ROWS }
+    val gridColumns: Flow<Int> = store.data.map { it[KEY_GRID_COLUMNS] ?: DEFAULT_COLUMNS }
+    val gridRows: Flow<Int>    = store.data.map { it[KEY_GRID_ROWS]    ?: DEFAULT_ROWS }
 
-    val hiddenApps: Flow<Set<String>> = context.dataStore.data.map { it[KEY_HIDDEN_APPS] ?: emptySet() }
+    val hiddenApps: Flow<Set<String>> = store.data.map { it[KEY_HIDDEN_APPS] ?: emptySet() }
 
-    val swipeDownNotifications: Flow<Boolean> = context.dataStore.data.map { it[KEY_SWIPE_DOWN] ?: true }
+    val swipeDownNotifications: Flow<Boolean> = store.data.map { it[KEY_SWIPE_DOWN] ?: true }
 
-    val themeMode: Flow<ThemeMode> = context.dataStore.data.map { ThemeMode.fromKey(it[KEY_THEME]) }
+    val themeMode: Flow<ThemeMode> = store.data.map { ThemeMode.fromKey(it[KEY_THEME]) }
 
     /** Default style of app tiles; null fields = theme background / auto text / flat. */
-    val globalStyle: Flow<TileStyle> = context.dataStore.data.map {
+    val globalStyle: Flow<TileStyle> = store.data.map {
         TileStyle(it[KEY_GLOBAL_BG], it[KEY_GLOBAL_FC], it[KEY_GLOBAL_TX])
     }
 
@@ -62,7 +64,7 @@ class AppPreferences(private val context: Context) {
      */
     suspend fun togglePin(key: String, packageName: String, userSerial: Long?): Boolean {
         var fitted = true
-        context.dataStore.edit { prefs ->
+        store.edit { prefs ->
             val current = defsOf(prefs)
             if (current.any { it.type == TYPE_APP && it.id == key }) {
                 prefs[KEY_TILES] = TileCodec.encode(current.filterNot { it.type == TYPE_APP && it.id == key })
@@ -74,14 +76,17 @@ class AppPreferences(private val context: Context) {
         return fitted
     }
 
-    suspend fun saveTiles(defs: List<TileDef>) {
-        context.dataStore.edit { it[KEY_TILES] = TileCodec.encode(defs) }
+    /** Reorders the displayed tiles; tiles absent from [orderedIds] keep their slot. */
+    suspend fun reorderTiles(orderedIds: List<String>) {
+        store.edit { prefs ->
+            prefs[KEY_TILES] = TileCodec.encode(defsOf(prefs).reordered(orderedIds))
+        }
     }
 
     /** @return false when the grid is full. */
     suspend fun addTile(def: TileDef): Boolean {
         var fitted = true
-        context.dataStore.edit { prefs ->
+        store.edit { prefs ->
             val next = defsOf(prefs) + def
             if (fits(prefs, next)) prefs[KEY_TILES] = TileCodec.encode(next) else fitted = false
         }
@@ -89,13 +94,20 @@ class AppPreferences(private val context: Context) {
     }
 
     suspend fun removeTile(id: String) {
-        context.dataStore.edit { prefs ->
+        store.edit { prefs ->
             prefs[KEY_TILES] = TileCodec.encode(defsOf(prefs).filter { it.id != id })
         }
     }
 
+    suspend fun removeTiles(ids: Set<String>) {
+        if (ids.isEmpty()) return
+        store.edit { prefs ->
+            prefs[KEY_TILES] = TileCodec.encode(defsOf(prefs).filter { it.id !in ids })
+        }
+    }
+
     suspend fun updateTile(id: String, transform: (TileDef) -> TileDef) {
-        context.dataStore.edit { prefs ->
+        store.edit { prefs ->
             prefs[KEY_TILES] = TileCodec.encode(defsOf(prefs).map { if (it.id == id) transform(it) else it })
         }
     }
@@ -104,7 +116,7 @@ class AppPreferences(private val context: Context) {
     suspend fun setGridColumns(columns: Int): Boolean {
         val target = columns.coerceIn(MIN_COLUMNS, MAX_COLUMNS)
         var fitted = true
-        context.dataStore.edit { prefs ->
+        store.edit { prefs ->
             val rows = prefs[KEY_GRID_ROWS] ?: DEFAULT_ROWS
             if (requiredTileRows(defsOf(prefs).fullRowFlags(), target) <= rows) {
                 prefs[KEY_GRID_COLUMNS] = target
@@ -119,7 +131,7 @@ class AppPreferences(private val context: Context) {
     suspend fun setGridRows(rows: Int): Boolean {
         val target = rows.coerceIn(MIN_ROWS, MAX_ROWS)
         var fitted = true
-        context.dataStore.edit { prefs ->
+        store.edit { prefs ->
             val columns = prefs[KEY_GRID_COLUMNS] ?: DEFAULT_COLUMNS
             if (requiredTileRows(defsOf(prefs).fullRowFlags(), columns) <= target) {
                 prefs[KEY_GRID_ROWS] = target
@@ -131,39 +143,39 @@ class AppPreferences(private val context: Context) {
     }
 
     suspend fun setHidden(key: String, hidden: Boolean) {
-        context.dataStore.edit { prefs ->
+        store.edit { prefs ->
             val current = prefs[KEY_HIDDEN_APPS] ?: emptySet()
             prefs[KEY_HIDDEN_APPS] = if (hidden) current + key else current - key
         }
     }
 
     suspend fun setSwipeDownNotifications(enabled: Boolean) {
-        context.dataStore.edit { it[KEY_SWIPE_DOWN] = enabled }
+        store.edit { it[KEY_SWIPE_DOWN] = enabled }
     }
 
     suspend fun setThemeMode(mode: ThemeMode) {
-        context.dataStore.edit { it[KEY_THEME] = mode.key }
+        store.edit { it[KEY_THEME] = mode.key }
     }
 
     suspend fun setGlobalBackground(color: Int) {
-        context.dataStore.edit { it[KEY_GLOBAL_BG] = color }
+        store.edit { it[KEY_GLOBAL_BG] = color }
     }
 
     suspend fun setGlobalTextColor(color: Int?) {
-        context.dataStore.edit { prefs ->
+        store.edit { prefs ->
             if (color != null) prefs[KEY_GLOBAL_FC] = color else prefs.remove(KEY_GLOBAL_FC)
         }
     }
 
     suspend fun setGlobalTexture(texture: String?) {
-        context.dataStore.edit { prefs ->
+        store.edit { prefs ->
             if (texture != null) prefs[KEY_GLOBAL_TX] = texture else prefs.remove(KEY_GLOBAL_TX)
         }
     }
 
     /** Removes every per-tile style override so all app tiles follow the global style. */
     suspend fun applyGlobalStyleToAllTiles() {
-        context.dataStore.edit { prefs ->
+        store.edit { prefs ->
             prefs[KEY_TILES] = TileCodec.encode(
                 defsOf(prefs).map {
                     if (it.type == TYPE_APP) it.copy(color = null, textColor = null, texture = null) else it
@@ -173,7 +185,7 @@ class AppPreferences(private val context: Context) {
     }
 
     suspend fun exportBackup(): String {
-        val prefs = context.dataStore.data.first()
+        val prefs = store.data.first()
         return TileCodec.encodeBackup(
             LayoutBackup(
                 columns = prefs[KEY_GRID_COLUMNS] ?: DEFAULT_COLUMNS,
@@ -196,7 +208,7 @@ class AppPreferences(private val context: Context) {
         val needed = requiredTileRows(backup.tiles.fullRowFlags(), columns)
         if (needed > MAX_ROWS) return false
         val rows = maxOf(backup.rows.coerceIn(MIN_ROWS, MAX_ROWS), needed)
-        context.dataStore.edit { prefs ->
+        store.edit { prefs ->
             prefs[KEY_TILES] = TileCodec.encode(backup.tiles)
             prefs[KEY_GRID_COLUMNS] = columns
             prefs[KEY_GRID_ROWS] = rows

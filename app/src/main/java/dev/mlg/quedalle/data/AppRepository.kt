@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.LauncherApps
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
@@ -87,6 +88,27 @@ class AppRepository(private val context: Context) {
                 emptyList()
             }
         }
+    }
+
+    /**
+     * True only when the package is definitely gone from its profile. An app
+     * that is merely unreachable (locked or paused profile, any lookup
+     * failure) is reported as still installed, so its tile is never dropped
+     * on a doubt.
+     */
+    fun isUninstalled(packageName: String, userSerial: Long?): Boolean = try {
+        val user = if (userSerial == null) Process.myUserHandle()
+                   else userManager.getUserForSerialNumber(userSerial)
+        when {
+            user == null -> true // the profile itself was removed
+            !userManager.isUserUnlocked(user) || userManager.isQuietModeEnabled(user) -> false
+            else -> launcherApps.getApplicationInfo(packageName, 0, user) == null
+        }
+    } catch (_: PackageManager.NameNotFoundException) {
+        true
+    } catch (e: Exception) {
+        Log.w(TAG, "Cannot tell whether $packageName is installed", e)
+        false
     }
 
     fun launchApp(app: AppInfo) {

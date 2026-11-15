@@ -6,6 +6,7 @@ import dev.mlg.quedalle.data.TYPE_DIVIDER
 import dev.mlg.quedalle.data.TYPE_SPACER
 import dev.mlg.quedalle.data.TileCodec
 import dev.mlg.quedalle.data.TileDef
+import dev.mlg.quedalle.data.reordered
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -96,5 +97,26 @@ class TileCodecTest {
     @Test
     fun `invalid backup returns null`() {
         assertNull(TileCodec.decodeBackup("nope"))
+    }
+
+    @Test
+    fun `duplicated ids keep only the first tile`() {
+        val raw = """[{"t":"app","id":"com.a","pkg":"com.a","l":"first"},""" +
+            """{"t":"spacer","id":"sp_1"},{"t":"app","id":"com.a","pkg":"com.a","l":"second"}]"""
+        val defs = TileCodec.decode(raw)!!
+        assertEquals(listOf("com.a", "sp_1"), defs.map { it.id })
+        assertEquals("first", defs.first().label)
+    }
+
+    @Test
+    fun `reordered moves the named tiles and leaves the others in place`() {
+        val defs = listOf("a", "x", "b", "y", "c").map { TileDef(TYPE_APP, it, pkg = it) }
+        assertEquals(listOf("c", "x", "a", "y", "b"), defs.reordered(listOf("c", "a", "b")).map { it.id })
+    }
+
+    @Test
+    fun `reordered ignores ids that no longer exist`() {
+        val defs = listOf("a", "b").map { TileDef(TYPE_APP, it, pkg = it) }
+        assertEquals(listOf("b", "a"), defs.reordered(listOf("gone", "b", "a")).map { it.id })
     }
 }

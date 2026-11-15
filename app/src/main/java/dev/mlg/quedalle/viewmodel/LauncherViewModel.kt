@@ -29,7 +29,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.Collator
@@ -46,6 +49,8 @@ data class LauncherUiState(
     val swipeDownNotifications: Boolean = true,
     val globalStyle: TileStyle = TileStyle(),
     val hiddenApps: List<AppInfo> = emptyList(),
+    /** True until the installed apps have been read once. */
+    val isLoading: Boolean = false,
 )
 
 enum class UiMessage { GRID_FULL, EXPORT_SUCCESS, EXPORT_FAILED, IMPORT_SUCCESS, IMPORT_FAILED, SHADE_UNSUPPORTED }
@@ -72,12 +77,15 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
     val themeMode: StateFlow<ThemeMode> = prefs.themeMode
         .stateIn(viewModelScope, SharingStarted.Eagerly, ThemeMode.SYSTEM)
 
-    private val allApps: StateFlow<List<AppInfo>> = repo.apps
+    /** Null until the first load: "no apps yet" must not read as "nothing pinned". */
+    private val allApps: StateFlow<List<AppInfo>?> = repo.apps
+        .onEach { apps -> pruneUninstalledTiles(apps) }
         .map { apps ->
             val collator = Collator.getInstance()
             apps.sortedWith(compareBy(collator) { it.label })
         }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+        .flowOn(Dispatchers.IO)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     private val gridConfig: Flow<GridConfig> = combine(
         prefs.gridColumns, prefs.gridRows, prefs.swipeDownNotifications, prefs.globalStyle
@@ -93,7 +101,8 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
         prefs.hiddenApps,
         searchState,
         gridConfig,
-    ) { apps, tileDefs, hidden, search, config ->
+    ) { loadedApps, tileDefs, hidden, search, config ->
+        val apps = loadedApps ?: emptyList()
         val appMap  = apps.associateBy { it.key }
         val appDefs = tileDefs.filter { it.type == TYPE_APP }.associateBy { it.id }
 
@@ -149,12 +158,30 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
             swipeDownNotifications = config.swipeDown,
             globalStyle = config.globalStyle,
             hiddenApps = apps.filter { it.key in hidden },
+            isLoading = loadedApps == null,
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = LauncherUiState(),
+        initialValue = LauncherUiState(isLoading = true),
     )
+
+    /**
+     * Drops the tiles of apps that were uninstalled. Without this they stay
+     * in storage, invisible, and still take up room in the grid.
+     */
+    private suspend fun pruneUninstalledTiles(apps: List<AppInfo>) {
+        try {
+            val installed = apps.mapTo(HashSet()) { it.key }
+            val gone = prefs.tileDefinitions.first()
+                .filter { it.type == TYPE_APP && it.id !in installed }
+                .filter { repo.isUninstalled(it.pkg ?: it.id, it.userSerial) }
+                .mapTo(HashSet()) { it.id }
+            prefs.removeTiles(gone)
+        } catch (e: Exception) {
+            Log.e(TAG, "Pruning uninstalled tiles failed", e)
+        }
+    }
 
     fun refreshApps() = repo.refresh()
 
@@ -184,7 +211,7 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun saveTileOrder(tiles: List<TileItem>) {
-        launchLogged { prefs.saveTiles(tiles.map { it.toDef() }) }
+        launchLogged { prefs.reorderTiles(tiles.map { it.id }) }
     }
 
     fun addSpacer(color: Int, texture: String?) {
@@ -326,14 +353,4 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
     }
-}
-
-private fun TileItem.toDef() = when (this) {
-    is TileItem.App     -> TileDef(
-        TYPE_APP, id,
-        pkg = info.packageName, userSerial = info.userSerial, label = info.customLabel,
-        color = override.background, textColor = override.textColor, texture = override.texture,
-    )
-    is TileItem.Spacer  -> TileDef(TYPE_SPACER,  id, color = color, texture = texture)
-    is TileItem.Divider -> TileDef(TYPE_DIVIDER, id, color = color)
 }

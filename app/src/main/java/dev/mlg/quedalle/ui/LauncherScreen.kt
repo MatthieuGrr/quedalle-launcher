@@ -138,6 +138,10 @@ fun LauncherScreen(vm: LauncherViewModel) {
                         },
                 ) {
                     when {
+                        // Apps not read yet: stay blank rather than claim
+                        // that nothing is pinned.
+                        state.isLoading -> Unit
+
                         state.displayedTiles.isEmpty() ->
                             EmptyHint(state.isSearching, Modifier.fillMaxSize())
 

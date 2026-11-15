@@ -41,6 +41,19 @@ data class TileDef(
 
 fun List<TileDef>.fullRowFlags(): List<Boolean> = map { it.type == TYPE_DIVIDER }
 
+/**
+ * Applies a new order to the tiles named in [orderedIds] and leaves every
+ * other tile in its slot. The grid only knows the tiles it displays: tiles
+ * of apps that are momentarily unavailable (locked work profile, update in
+ * progress) must survive a reorder untouched.
+ */
+fun List<TileDef>.reordered(orderedIds: List<String>): List<TileDef> {
+    val byId = associateBy { it.id }
+    val moved = orderedIds.distinct().mapNotNull(byId::get).iterator()
+    val movedIds = orderedIds.toSet()
+    return map { if (it.id in movedIds) moved.next() else it }
+}
+
 /** Full launcher configuration, used for export/import. */
 @Serializable
 data class LayoutBackup(
@@ -100,13 +113,15 @@ object TileCodec {
         null
     }
 
+    // Ids are the grid's item keys: a duplicate would crash the home screen
+    // on every start, so only the first tile of each id is kept.
     private fun decodeElements(arr: JsonArray): List<TileDef> = arr.mapNotNull { element ->
         try {
             json.decodeFromJsonElement(TileDef.serializer(), element).takeIf(::isValid)
         } catch (_: Exception) {
             null
         }
-    }
+    }.distinctBy { it.id }
 
     private fun isValid(def: TileDef): Boolean = def.id.isNotBlank() && when (def.type) {
         TYPE_APP -> !def.pkg.isNullOrBlank()
