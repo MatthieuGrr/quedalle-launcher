@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=block" rel="stylesheet">
+<style>
+  /* Same values as the app's dark palette (ui/theme/Theme.kt). */
+  :root {
+    --background: #000000;
+    --card: #141414;
+    --text: #E0E0E0;
+    --muted: #555555;
+    --divider: #2A2A2A;
+    --blue: #0F4C81;
+    --amber: #FFB74D;
+  }
+  * { margin: 0; box-sizing: border-box; }
+  body {
+    width: 1024px; height: 500px; overflow: hidden;
+    background: var(--background); color: var(--text);
+    font-family: Roboto, sans-serif;
+    position: relative;
+  }
+
+  .brand { position: absolute; left: 84px; top: 0; height: 500px; display: flex; flex-direction: column; justify-content: center; }
+  .mark { display: grid; grid-template-columns: repeat(2, 30px); gap: 7px; margin-bottom: 34px; }
+  .mark i { height: 30px; border-radius: 9px; background: var(--text); }
+  h1 { font-size: 76px; font-weight: 700; letter-spacing: -1.5px; line-height: 1; }
+  .tagline { margin-top: 18px; font-size: 25px; font-weight: 400; color: var(--muted); }
+
+  /* A slice of the real home screen, running off the top and bottom edges. */
+  .grid {
+    position: absolute; left: 508px; top: -96px;
+    display: grid; grid-template-columns: repeat(3, 160px); gap: 12px;
+  }
+  .tile {
+    height: 126px; border-radius: 15px; background: var(--card);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px; font-weight: 500;
+  }
+  .tile.blue { background: var(--blue); }
+  .tile.outline { background: none; border: 1.5px solid var(--amber); color: var(--amber); }
+  .rule { grid-column: 1 / -1; height: 24px; display: flex; align-items: center; padding: 0 18px; }
+  .rule::before { content: ""; flex: 1; height: 1.5px; background: var(--divider); }
+
+  /* The grid sinks into the background towards the text. */
+  .fade { position: absolute; left: 458px; top: 0; width: 170px; height: 500px;
+          background: linear-gradient(90deg, var(--background) 30%, transparent); }
+</style>
+</head>
+<body>
+  <div class="grid" id="grid"></div>
+  <div class="fade"></div>
+  <div class="brand">
+    <div class="mark"><i></i><i></i><i></i><i></i></div>
+    <h1>Quedalle</h1>
+    <div class="tagline" id="tagline"></div>
+  </div>
+<script>
+  const text = {
+    en: { tagline: "Nothing more.",
+          tiles: ["Phone", "Messages", "Contacts", "Camera", "Gallery", "Maps", "-",
+                  "Mail", "Calendar", "Notes", "Browser", "Music", "Podcasts",
+                  "Files", "Calculator", "Settings"] },
+    fr: { tagline: "Rien de plus.",
+          tiles: ["Téléphone", "Messages", "Contacts", "Photo", "Galerie", "Cartes", "-",
+                  "Mail", "Agenda", "Notes", "Navigateur", "Musique", "Podcasts",
+                  "Fichiers", "Calculatrice", "Paramètres"] },
+  }[new URLSearchParams(location.search).get("lang") || "en"];
+  const styled = { 4: "blue", 8: "outline" };   // one colored tile, one outline tile
+  document.getElementById("tagline").textContent = text.tagline;
+  document.getElementById("grid").innerHTML = text.tiles.map((label, i) =>
+    label === "-" ? '<div class="rule"></div>'
+                  : `<div class="tile ${styled[i] || ""}">${label}</div>`).join("");
+</script>
+</body>
+</html>
