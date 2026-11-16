@@ -55,9 +55,14 @@ The same launcher five times: only the settings differ.
 
 ## Install
 
-Get it on [F-Droid](https://f-droid.org/packages/dev.mlg.quedalle/), or grab an APK
-from the [releases page](https://github.com/MatthieuGrr/quedalle-launcher/releases)
-(release APKs are unsigned — F-Droid builds and signs its own).
+Get it on [F-Droid](https://f-droid.org/packages/dev.mlg.quedalle/): that is
+the build to use every day, signed and updated by F-Droid.
+
+The [releases page](https://github.com/MatthieuGrr/quedalle-launcher/releases)
+carries CI builds for testing. Only `app-debug.apk` installs directly, and it
+cannot be updated in place (each build is signed with a throwaway key);
+`app-release-unsigned.apk` is the unsigned release build, for those who sign it
+themselves.
 
 Requires Android 8.0 (API 26) or higher.
 
@@ -98,9 +103,17 @@ Issues and pull requests are welcome. Before opening a pull request:
   network or a sensitive permission.
 
 The store presentation lives in `fastlane/metadata/android/` (descriptions,
-screenshots, changelogs, one folder per language). The feature graphic is
-rendered from `tools/feature-graphic/banner.html`, which uses the app's own
-palette: `node tools/feature-graphic/render.js` (needs Playwright).
+screenshots, changelogs, one folder per language):
+
+- **Feature graphic** — rendered from `tools/feature-graphic/banner.html`, which
+  uses the app's own palette: `node tools/feature-graphic/render.js` (needs
+  Playwright).
+- **Screenshots** — taken on a device from `tools/screenshots/demo-en.json` and
+  `demo-fr.json`. Import one (Settings → Backup; it replaces the whole
+  configuration, so export yours first), then show each layout with its look:
+  *Home* and *Info* with Black, *Paper*, *Mosaic* and *Outline* with the look
+  of the same name. The tiles are link tiles with generic labels, so the result
+  does not depend on the apps installed. The status bar is blanked afterwards.
 
 ### Releasing
 
