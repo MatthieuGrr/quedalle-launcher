@@ -14,9 +14,11 @@ just text on tiles.
 
 ## Screenshots
 
-| EN | FR |
-|---|---|
-| ![English screenshot](fastlane/metadata/android/en-US/images/phoneScreenshots/Screenshot_en-US.png) | ![French screenshot](fastlane/metadata/android/fr-FR/images/phoneScreenshots/Screenshot_fr-FR.png) |
+| Home | Info & shortcuts | Paper | Mosaic | Outline |
+|---|---|---|---|---|
+| ![Default dark home screen](fastlane/metadata/android/en-US/images/phoneScreenshots/1_home.png) | ![Info tiles, shortcuts and textures](fastlane/metadata/android/en-US/images/phoneScreenshots/2_info.png) | ![Paper look: light, serif](fastlane/metadata/android/en-US/images/phoneScreenshots/3_paper.png) | ![Mosaic look: edge to edge, capitals](fastlane/metadata/android/en-US/images/phoneScreenshots/4_mosaic.png) | ![Outline look: thin strokes, monospace](fastlane/metadata/android/en-US/images/phoneScreenshots/5_outline.png) |
+
+The same launcher five times: only the settings differ.
 
 ## Features
 
