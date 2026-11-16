@@ -6,7 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.ui.text.style.TextOverflow
-import dev.mlg.quedalle.LockService
 import dev.mlg.quedalle.data.AppPreferences
 import dev.mlg.quedalle.data.ProfileName
 import dev.mlg.quedalle.data.ProfileState
@@ -312,10 +311,6 @@ private fun GesturesSection(state: LauncherUiState, vm: LauncherViewModel) {
         }
     }
     Text(stringResource(R.string.settings_gestures_hint), color = palette.textMuted, fontSize = 11.sp)
-    if (state.gestures.containsValue(GestureAction.LockScreen)) {
-        Text(stringResource(R.string.settings_lock_hint), color = palette.textMuted, fontSize = 11.sp,
-            modifier = Modifier.padding(top = 4.dp))
-    }
 
     picking?.let { gesture ->
         GestureActionDialog(
@@ -340,7 +335,6 @@ private fun gestureActionLabel(action: GestureAction, apps: List<AppInfo>): Stri
     GestureAction.Notifications -> stringResource(R.string.gesture_notifications)
     GestureAction.QuickSettings -> stringResource(R.string.gesture_quick_settings)
     GestureAction.Search -> stringResource(R.string.gesture_search)
-    GestureAction.LockScreen -> stringResource(R.string.gesture_lock)
     GestureAction.NextProfile -> stringResource(R.string.gesture_next_profile)
     GestureAction.PrivateSpace -> stringResource(R.string.gesture_private_space)
     is GestureAction.LaunchApp ->
@@ -362,7 +356,6 @@ private fun GestureActionDialog(
         GestureAction.Notifications,
         GestureAction.QuickSettings,
         GestureAction.Search,
-        GestureAction.LockScreen.takeIf { LockService.isSupported },
         GestureAction.NextProfile,
         GestureAction.PrivateSpace.takeIf { state.privateSpaceLocked != null },
     )

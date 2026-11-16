@@ -18,7 +18,6 @@ import android.os.UserHandle
 import android.os.UserManager
 import android.provider.AlarmClock
 import android.provider.ContactsContract
-import android.provider.Settings
 import android.util.Log
 import androidx.core.net.toUri
 import dev.mlg.quedalle.model.AppInfo
@@ -213,8 +212,6 @@ class AppRepository(private val context: Context) {
             InfoKind.BATTERY -> Intent(Intent.ACTION_POWER_USAGE_SUMMARY)
         }
     )
-
-    fun openAccessibilitySettings(): Boolean = start(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
 
     private fun start(intent: Intent): Boolean = try {
         context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))

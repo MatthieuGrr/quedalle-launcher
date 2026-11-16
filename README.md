@@ -56,11 +56,6 @@ Or grab the APK from the [releases page](https://github.com/MatthieuGrr/quedalle
 All three are `normal`-level permissions (auto-granted, read nothing). No internet
 permission, no contacts permission, no notification access, no analytics.
 
-**Lock-screen gesture.** Android only lets an accessibility service turn the
-screen off. Quedalle ships one for that single purpose: it is disabled until
-you enable it yourself, subscribes to no events and cannot read window content.
-If you never bind a gesture to "Lock screen", it never runs.
-
 **Contact tiles** use the system contact picker, which hands over the one
 contact you choose — Quedalle cannot read your address book.
 

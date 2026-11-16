@@ -296,7 +296,6 @@ private val UiMessage.stringRes: Int
         UiMessage.IMPORT_SUCCESS -> R.string.msg_import_success
         UiMessage.IMPORT_FAILED  -> R.string.msg_import_failed
         UiMessage.SHADE_UNSUPPORTED -> R.string.msg_shade_unsupported
-        UiMessage.LOCK_NEEDS_SERVICE -> R.string.msg_lock_needs_service
         UiMessage.PROFILE_LIMIT -> R.string.msg_profile_limit
         UiMessage.LINK_INVALID -> R.string.msg_link_invalid
         UiMessage.CONTACT_FAILED -> R.string.msg_contact_failed

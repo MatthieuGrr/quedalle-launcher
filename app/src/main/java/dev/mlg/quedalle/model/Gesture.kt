@@ -12,7 +12,6 @@ sealed interface GestureAction {
     data object Notifications : GestureAction
     data object QuickSettings : GestureAction
     data object Search : GestureAction
-    data object LockScreen : GestureAction
     data object NextProfile : GestureAction
     data object PrivateSpace : GestureAction
     /** Launches the app identified by its [AppInfo.key]. */
@@ -24,7 +23,6 @@ sealed interface GestureAction {
         Notifications -> "notifications"
         QuickSettings -> "quick_settings"
         Search -> "search"
-        LockScreen -> "lock"
         NextProfile -> "next_profile"
         PrivateSpace -> "private_space"
         is LaunchApp -> APP_PREFIX + appKey
@@ -42,7 +40,6 @@ sealed interface GestureAction {
                 "notifications" -> Notifications
                 "quick_settings" -> QuickSettings
                 "search" -> Search
-                "lock" -> LockScreen
                 "next_profile" -> NextProfile
                 "private_space" -> PrivateSpace
                 else -> None

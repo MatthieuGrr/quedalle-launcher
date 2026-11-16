@@ -85,7 +85,6 @@
     <string name="label_address">Address</string>
     <string name="settings_gestures">Gestures</string>
     <string name="settings_gestures_hint">Double tap works on the empty space around tiles.</string>
-    <string name="settings_lock_hint">Locking the screen needs the Quedalle accessibility service (Settings → Accessibility). It is used for nothing else.</string>
     <string name="gesture_swipe_down">Swipe down</string>
     <string name="gesture_swipe_up">Swipe up</string>
     <string name="gesture_double_tap">Double tap</string>
@@ -93,7 +92,6 @@
     <string name="gesture_notifications">Notifications</string>
     <string name="gesture_quick_settings">Quick settings</string>
     <string name="gesture_search">Search</string>
-    <string name="gesture_lock">Lock screen</string>
     <string name="gesture_next_profile">Next layout</string>
     <string name="gesture_private_space">Lock / unlock private space</string>
     <string name="gesture_open_app">Open an app…</string>
@@ -104,11 +102,8 @@
     <string name="private_space_hint">Private apps appear in search and on their tiles only while the private space is unlocked.</string>
     <string name="action_lock">Lock</string>
     <string name="action_unlock">Unlock</string>
-    <string name="msg_lock_needs_service">Enable the Quedalle accessibility service to lock the screen</string>
     <string name="msg_profile_limit">Maximum number of layouts reached</string>
     <string name="msg_link_invalid">This address is not valid</string>
     <string name="msg_contact_failed">Could not add this contact</string>
     <string name="msg_private_space_failed">Could not lock or unlock the private space</string>
-    <string name="lock_service_label">Quedalle — lock screen</string>
-    <string name="lock_service_description">Lets the Quedalle “lock screen” gesture turn the screen off. It reads nothing and receives no events.</string>
 </resources>

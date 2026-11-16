@@ -85,7 +85,6 @@
     <string name="label_address">Adresse</string>
     <string name="settings_gestures">Gestes</string>
     <string name="settings_gestures_hint">Le double appui fonctionne sur l\'espace vide autour des tuiles.</string>
-    <string name="settings_lock_hint">Verrouiller l\'écran nécessite le service d\'accessibilité Quedalle (Paramètres → Accessibilité). Il ne sert à rien d\'autre.</string>
     <string name="gesture_swipe_down">Balayage vers le bas</string>
     <string name="gesture_swipe_up">Balayage vers le haut</string>
     <string name="gesture_double_tap">Double appui</string>
@@ -93,7 +92,6 @@
     <string name="gesture_notifications">Notifications</string>
     <string name="gesture_quick_settings">Réglages rapides</string>
     <string name="gesture_search">Recherche</string>
-    <string name="gesture_lock">Verrouiller l\'écran</string>
     <string name="gesture_next_profile">Disposition suivante</string>
     <string name="gesture_private_space">Verrouiller / déverrouiller l\'espace privé</string>
     <string name="gesture_open_app">Ouvrir une application…</string>
@@ -104,11 +102,8 @@
     <string name="private_space_hint">Les apps privées n\'apparaissent dans la recherche et sur leurs tuiles que lorsque l\'espace privé est déverrouillé.</string>
     <string name="action_lock">Verrouiller</string>
     <string name="action_unlock">Déverrouiller</string>
-    <string name="msg_lock_needs_service">Activez le service d\'accessibilité Quedalle pour verrouiller l\'écran</string>
     <string name="msg_profile_limit">Nombre maximal de dispositions atteint</string>
     <string name="msg_link_invalid">Cette adresse n\'est pas valide</string>
     <string name="msg_contact_failed">Impossible d\'ajouter ce contact</string>
     <string name="msg_private_space_failed">Impossible de verrouiller ou déverrouiller l\'espace privé</string>
-    <string name="lock_service_label">Quedalle — verrouillage</string>
-    <string name="lock_service_description">Permet au geste « verrouiller l\'écran » de Quedalle d\'éteindre l\'écran. Il ne lit rien et ne reçoit aucun événement.</string>
 </resources>

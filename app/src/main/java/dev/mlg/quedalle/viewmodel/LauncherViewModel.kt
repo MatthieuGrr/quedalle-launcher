@@ -5,7 +5,6 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import dev.mlg.quedalle.LockService
 import dev.mlg.quedalle.data.AppPreferences
 import dev.mlg.quedalle.data.AppRepository
 import dev.mlg.quedalle.data.AppShortcut
@@ -77,7 +76,7 @@ data class LauncherUiState(
 
 enum class UiMessage {
     GRID_FULL, LAUNCH_FAILED, EXPORT_SUCCESS, EXPORT_FAILED, IMPORT_SUCCESS, IMPORT_FAILED,
-    SHADE_UNSUPPORTED, LOCK_NEEDS_SERVICE, PROFILE_LIMIT, LINK_INVALID, CONTACT_FAILED,
+    SHADE_UNSUPPORTED, PROFILE_LIMIT, LINK_INVALID, CONTACT_FAILED,
     PRIVATE_SPACE_FAILED,
 }
 
@@ -419,11 +418,6 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
     // ── Settings ─────────────────────────────────────────────────────────────
     fun setGesture(gesture: Gesture, action: GestureAction) {
         launchLogged { prefs.setGesture(gesture, action) }
-        // Locking needs the accessibility service: send the user there once.
-        if (action == GestureAction.LockScreen && !LockService.isEnabled) {
-            _messages.tryEmit(UiMessage.LOCK_NEEDS_SERVICE)
-            repo.openAccessibilitySettings()
-        }
     }
 
     fun setThemeMode(mode: ThemeMode) {
@@ -499,11 +493,6 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
                 if (!repo.expandStatusBar(quickSettings = false)) _messages.tryEmit(UiMessage.SHADE_UNSUPPORTED)
             GestureAction.QuickSettings ->
                 if (!repo.expandStatusBar(quickSettings = true)) _messages.tryEmit(UiMessage.SHADE_UNSUPPORTED)
-            GestureAction.LockScreen ->
-                if (!LockService.lock()) {
-                    _messages.tryEmit(UiMessage.LOCK_NEEDS_SERVICE)
-                    repo.openAccessibilitySettings()
-                }
             GestureAction.NextProfile -> launchLogged { prefs.nextProfile() }
             GestureAction.PrivateSpace -> togglePrivateSpace()
             is GestureAction.LaunchApp -> {

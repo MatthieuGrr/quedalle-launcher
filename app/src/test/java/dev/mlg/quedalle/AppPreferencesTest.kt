@@ -309,13 +309,13 @@ class AppPreferencesTest {
     @Test
     fun `gestures survive a backup, old backups fall back to the switch`() = runBlocking {
         prefs.setGesture(Gesture.SWIPE_UP, GestureAction.LaunchApp("com.a#10"))
-        prefs.setGesture(Gesture.DOUBLE_TAP, GestureAction.LockScreen)
+        prefs.setGesture(Gesture.DOUBLE_TAP, GestureAction.Search)
         val backup = prefs.exportBackup()
         prefs.setGesture(Gesture.SWIPE_UP, GestureAction.None)
 
         assertTrue(prefs.importBackup(backup))
         assertEquals(GestureAction.LaunchApp("com.a#10"), prefs.gestures.first()[Gesture.SWIPE_UP])
-        assertEquals(GestureAction.LockScreen, prefs.gestures.first()[Gesture.DOUBLE_TAP])
+        assertEquals(GestureAction.Search, prefs.gestures.first()[Gesture.DOUBLE_TAP])
 
         assertTrue(prefs.importBackup("""{"columns":3,"rows":4,"swipeDownNotifications":false}"""))
         assertEquals(Gesture.entries.associateWith { GestureAction.None }, prefs.gestures.first())
