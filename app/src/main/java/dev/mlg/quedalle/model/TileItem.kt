@@ -6,6 +6,9 @@ const val TEXT_COLOR_AUTO = 1
 /** Explicit "flat, no texture" override. */
 const val TEXTURE_NONE = "none"
 
+/** Texture id of the "outline" look: a thin stroke, no fill. */
+const val TEXTURE_OUTLINE = "outline"
+
 /**
  * Visual customization of a tile.
  *

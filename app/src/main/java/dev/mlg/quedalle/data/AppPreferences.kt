@@ -12,6 +12,9 @@ import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dev.mlg.quedalle.model.Gesture
 import dev.mlg.quedalle.model.GestureAction
+import dev.mlg.quedalle.model.LookPreset
+import dev.mlg.quedalle.model.ScreenLook
+import dev.mlg.quedalle.model.TileShape
 import dev.mlg.quedalle.model.ThemeMode
 import dev.mlg.quedalle.model.TileStyle
 import dev.mlg.quedalle.model.TileText
@@ -56,6 +59,15 @@ class AppPreferences(private val store: DataStore<Preferences>) {
         private val KEY_TEXT_SIZE    = intPreferencesKey("text_size")
         private val KEY_TEXT_ALIGN   = stringPreferencesKey("text_align")
         private val KEY_TEXT_BOLD    = booleanPreferencesKey("text_bold")
+        private val KEY_TEXT_FONT    = stringPreferencesKey("text_font")
+        private val KEY_TEXT_CASE    = stringPreferencesKey("text_case")
+        private val KEY_TEXT_VERTICAL = stringPreferencesKey("text_vertical")
+        private val KEY_SHAPE_CORNER = intPreferencesKey("shape_corner")
+        private val KEY_SHAPE_GAP    = intPreferencesKey("shape_gap")
+        private val KEY_SHAPE_MARGIN = intPreferencesKey("shape_margin")
+        private val KEY_BG_DARK      = intPreferencesKey("screen_bg_dark")
+        private val KEY_BG_LIGHT     = intPreferencesKey("screen_bg_light")
+        private val KEY_HAPTICS      = booleanPreferencesKey("haptics")
         private val KEY_PROFILES     = stringPreferencesKey("profiles")
         private val KEY_ACTIVE_PROFILE = stringPreferencesKey("active_profile")
 
@@ -87,8 +99,14 @@ class AppPreferences(private val store: DataStore<Preferences>) {
         TileStyle(it[KEY_GLOBAL_BG], it[KEY_GLOBAL_FC], it[KEY_GLOBAL_TX])
     }
 
-    val tileText: Flow<TileText> = store.data.map {
-        TileText.of(it[KEY_TEXT_SIZE], it[KEY_TEXT_ALIGN], it[KEY_TEXT_BOLD])
+    val tileText: Flow<TileText> = store.data.map { tileTextOf(it) }
+
+    val tileShape: Flow<TileShape> = store.data.map {
+        TileShape.of(it[KEY_SHAPE_CORNER], it[KEY_SHAPE_GAP], it[KEY_SHAPE_MARGIN])
+    }
+
+    val screenLook: Flow<ScreenLook> = store.data.map {
+        ScreenLook(it[KEY_BG_DARK], it[KEY_BG_LIGHT], it[KEY_HAPTICS] ?: false)
     }
 
     val profiles: Flow<ProfileState> = store.data.map { prefs ->
@@ -301,11 +319,35 @@ class AppPreferences(private val store: DataStore<Preferences>) {
     }
 
     suspend fun setTileText(text: TileText) {
-        val valid = TileText.of(text.sizeSp, text.alignKey, text.bold)
+        store.edit { it.put(text) }
+    }
+
+    suspend fun setTileShape(shape: TileShape) {
+        store.edit { it.put(shape) }
+    }
+
+    /** Background of the dark or light theme; null follows the theme. */
+    suspend fun setScreenBackground(dark: Boolean, color: Int?) {
+        store.edit { it.putOrRemove(if (dark) KEY_BG_DARK else KEY_BG_LIGHT, color) }
+    }
+
+    suspend fun setHaptics(enabled: Boolean) {
+        store.edit { it[KEY_HAPTICS] = enabled }
+    }
+
+    /**
+     * Applies a ready-made look in one go. Per-tile overrides, the text
+     * size and the other theme's background are left alone.
+     */
+    suspend fun applyPreset(preset: LookPreset) {
         store.edit { prefs ->
-            prefs[KEY_TEXT_SIZE] = valid.sizeSp
-            prefs[KEY_TEXT_ALIGN] = valid.alignKey
-            prefs[KEY_TEXT_BOLD] = valid.bold
+            prefs[KEY_THEME] = preset.theme.key
+            prefs.putOrRemove(if (preset.theme == ThemeMode.LIGHT) KEY_BG_LIGHT else KEY_BG_DARK, preset.background)
+            prefs.putOrRemove(KEY_GLOBAL_BG, preset.style.background)
+            prefs.putOrRemove(KEY_GLOBAL_FC, preset.style.textColor)
+            prefs.putOrRemove(KEY_GLOBAL_TX, preset.style.texture)
+            prefs.put(preset.shape)
+            prefs.put(preset.text.copy(sizeSp = tileTextOf(prefs).sizeSp))
         }
     }
 
@@ -327,6 +369,15 @@ class AppPreferences(private val store: DataStore<Preferences>) {
                 tileTextSize = prefs[KEY_TEXT_SIZE],
                 tileTextAlign = prefs[KEY_TEXT_ALIGN],
                 tileTextBold = prefs[KEY_TEXT_BOLD],
+                tileTextFont = prefs[KEY_TEXT_FONT],
+                tileTextCase = prefs[KEY_TEXT_CASE],
+                tileTextVertical = prefs[KEY_TEXT_VERTICAL],
+                cornerRadius = prefs[KEY_SHAPE_CORNER],
+                tileGap = prefs[KEY_SHAPE_GAP],
+                gridMargin = prefs[KEY_SHAPE_MARGIN],
+                backgroundDark = prefs[KEY_BG_DARK],
+                backgroundLight = prefs[KEY_BG_LIGHT],
+                haptics = prefs[KEY_HAPTICS],
                 hidden = (prefs[KEY_HIDDEN_APPS] ?: emptySet()).toList(),
                 tiles = defsOf(prefs),
                 gestures = gestures.entries.associate { (gesture, action) -> gesture.key to action.encode() },
@@ -361,13 +412,19 @@ class AppPreferences(private val store: DataStore<Preferences>) {
 
             prefs[KEY_HIDDEN_APPS] = backup.hidden.toSet()
             prefs[KEY_THEME] = ThemeMode.fromKey(backup.theme).key
-            backup.globalBackground?.let { prefs[KEY_GLOBAL_BG] = it } ?: prefs.remove(KEY_GLOBAL_BG)
-            backup.globalTextColor?.let { prefs[KEY_GLOBAL_FC] = it } ?: prefs.remove(KEY_GLOBAL_FC)
-            backup.globalTexture?.let { prefs[KEY_GLOBAL_TX] = it } ?: prefs.remove(KEY_GLOBAL_TX)
-            val text = TileText.of(backup.tileTextSize, backup.tileTextAlign, backup.tileTextBold)
-            prefs[KEY_TEXT_SIZE] = text.sizeSp
-            prefs[KEY_TEXT_ALIGN] = text.alignKey
-            prefs[KEY_TEXT_BOLD] = text.bold
+            prefs.putOrRemove(KEY_GLOBAL_BG, backup.globalBackground)
+            prefs.putOrRemove(KEY_GLOBAL_FC, backup.globalTextColor)
+            prefs.putOrRemove(KEY_GLOBAL_TX, backup.globalTexture)
+            prefs.put(
+                TileText.of(
+                    backup.tileTextSize, backup.tileTextAlign, backup.tileTextBold,
+                    backup.tileTextFont, backup.tileTextCase, backup.tileTextVertical,
+                )
+            )
+            prefs.put(TileShape.of(backup.cornerRadius, backup.tileGap, backup.gridMargin))
+            prefs.putOrRemove(KEY_BG_DARK, backup.backgroundDark)
+            prefs.putOrRemove(KEY_BG_LIGHT, backup.backgroundLight)
+            prefs[KEY_HAPTICS] = backup.haptics ?: false
 
             // Backups older than 3.0 only know the swipe-down switch.
             prefs[KEY_SWIPE_DOWN] = backup.swipeDownNotifications
@@ -381,6 +438,31 @@ class AppPreferences(private val store: DataStore<Preferences>) {
     }
 
     // ── Internals ────────────────────────────────────────────────────────────
+
+    private fun tileTextOf(prefs: Preferences) = TileText.of(
+        prefs[KEY_TEXT_SIZE], prefs[KEY_TEXT_ALIGN], prefs[KEY_TEXT_BOLD],
+        prefs[KEY_TEXT_FONT], prefs[KEY_TEXT_CASE], prefs[KEY_TEXT_VERTICAL],
+    )
+
+    private fun MutablePreferences.put(text: TileText) {
+        this[KEY_TEXT_SIZE] = text.sizeSp.coerceIn(TileText.MIN_SIZE_SP, TileText.MAX_SIZE_SP)
+        this[KEY_TEXT_ALIGN] = text.alignKey
+        this[KEY_TEXT_BOLD] = text.bold
+        this[KEY_TEXT_FONT] = text.font.key
+        this[KEY_TEXT_CASE] = text.case.key
+        this[KEY_TEXT_VERTICAL] = text.vertical.key
+    }
+
+    private fun MutablePreferences.put(shape: TileShape) {
+        val valid = TileShape.of(shape.cornerDp, shape.gapDp, shape.marginDp)
+        this[KEY_SHAPE_CORNER] = valid.cornerDp
+        this[KEY_SHAPE_GAP] = valid.gapDp
+        this[KEY_SHAPE_MARGIN] = valid.marginDp
+    }
+
+    private fun <T> MutablePreferences.putOrRemove(key: Preferences.Key<T>, value: T?) {
+        if (value != null) this[key] = value else remove(key)
+    }
 
     private fun fits(prefs: Preferences, defs: List<TileDef>): Boolean {
         val columns = prefs[KEY_GRID_COLUMNS] ?: DEFAULT_COLUMNS

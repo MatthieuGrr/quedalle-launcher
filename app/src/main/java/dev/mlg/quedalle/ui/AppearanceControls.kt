@@ -43,7 +43,10 @@ import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
 import dev.mlg.quedalle.ui.theme.QuedalleColors
 import dev.mlg.quedalle.ui.theme.Textures
 import dev.mlg.quedalle.ui.theme.resolveTileColor
+import dev.mlg.quedalle.ui.theme.tileCorners
+import dev.mlg.quedalle.ui.theme.tileLabel
 import dev.mlg.quedalle.ui.theme.tileLabelAlignment
+import dev.mlg.quedalle.ui.theme.tileSurface
 import dev.mlg.quedalle.ui.theme.tileLabelStyle
 import dev.mlg.quedalle.ui.theme.resolveTileTextColor
 
@@ -121,22 +124,20 @@ fun AppearanceControls(
 @Composable
 fun TilePreview(label: String?, background: Int, textColor: Int?, texture: String?) {
     val base = resolveTileColor(background)
-    val brush = Textures.brush(texture, base)
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         Box(
             modifier = Modifier
                 .size(width = 128.dp, height = 64.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .then(if (brush != null) Modifier.background(brush) else Modifier.background(base)),
+                .tileSurface(texture, base, tileCorners()),
             contentAlignment = tileLabelAlignment(),
         ) {
             if (label != null) {
                 Text(
-                    text = label,
+                    text = tileLabel(label),
                     style = tileLabelStyle(resolveTileTextColor(TileStyle(background, textColor, texture), base)),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(horizontal = 8.dp),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
                 )
             }
         }
@@ -170,7 +171,7 @@ internal fun ColorPicker(selected: Int, onSelect: (Int) -> Unit) {
 }
 
 @Composable
-private fun ColorSwatch(
+internal fun ColorSwatch(
     color: Int,
     selected: Int,
     modifier: Modifier = Modifier,
@@ -204,7 +205,7 @@ private fun ColorSwatch(
 }
 
 @Composable
-private fun AutoSwatch(selected: Boolean, modifier: Modifier = Modifier, onSelect: () -> Unit) {
+internal fun AutoSwatch(selected: Boolean, modifier: Modifier = Modifier, onSelect: () -> Unit) {
     val palette = LocalQuedallePalette.current
     val shape = RoundedCornerShape(8.dp)
     Box(
@@ -229,7 +230,6 @@ private fun TextureRow(selected: String?, base: Color, onSelect: (String?) -> Un
         modifier = Modifier.fillMaxWidth(),
     ) {
         Textures.all.forEach { tex ->
-            val brush = Textures.brush(tex, base)
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.weight(1f),
@@ -238,8 +238,7 @@ private fun TextureRow(selected: String?, base: Color, onSelect: (String?) -> Un
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1.6f)
-                        .clip(shape)
-                        .then(if (brush != null) Modifier.background(brush) else Modifier.background(base))
+                        .tileSurface(tex, base, shape)
                         .then(if (tex == selected) Modifier.border(2.dp, palette.textStrong, shape) else Modifier)
                         .clickable { onSelect(tex) },
                 )
@@ -258,6 +257,7 @@ private fun textureLabelRes(texture: String?): Int = when (texture) {
     Textures.IRIDESCENT -> R.string.texture_iridescent
     Textures.GRADIENT   -> R.string.texture_gradient
     Textures.GLASS      -> R.string.texture_glass
+    Textures.OUTLINE    -> R.string.texture_outline
     else                -> R.string.texture_none
 }
 

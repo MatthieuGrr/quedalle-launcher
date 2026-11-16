@@ -22,6 +22,9 @@ import dev.mlg.quedalle.model.AppInfo
 import dev.mlg.quedalle.model.Gesture
 import dev.mlg.quedalle.model.GestureAction
 import dev.mlg.quedalle.model.InfoKind
+import dev.mlg.quedalle.model.LookPreset
+import dev.mlg.quedalle.model.ScreenLook
+import dev.mlg.quedalle.model.TileShape
 import dev.mlg.quedalle.model.ShortcutTarget
 import dev.mlg.quedalle.model.TEXTURE_NONE
 import dev.mlg.quedalle.model.ThemeMode
@@ -62,6 +65,8 @@ data class LauncherUiState(
     val gestures: Map<Gesture, GestureAction> = emptyMap(),
     val globalStyle: TileStyle = TileStyle(),
     val tileText: TileText = TileText(),
+    val tileShape: TileShape = TileShape(),
+    val screen: ScreenLook = ScreenLook(),
     val profiles: ProfileState = ProfileState(),
     /** Every launchable app, sorted by label (hidden ones included). */
     val apps: List<AppInfo> = emptyList(),
@@ -88,8 +93,13 @@ private data class GridConfig(
     val rows: Int,
     val globalStyle: TileStyle,
     val tileText: TileText,
+    val tileShape: TileShape,
 )
-private data class Behavior(val gestures: Map<Gesture, GestureAction>, val profiles: ProfileState)
+private data class Behavior(
+    val gestures: Map<Gesture, GestureAction>,
+    val profiles: ProfileState,
+    val screen: ScreenLook,
+)
 private data class SearchState(val query: String, val isActive: Boolean)
 private data class Stored(val tiles: List<TileDef>, val hidden: Set<String>)
 
@@ -118,10 +128,14 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     private val gridConfig: Flow<GridConfig> = combine(
-        prefs.gridColumns, prefs.gridRows, prefs.globalStyle, prefs.tileText,
-    ) { cols, rows, global, text -> GridConfig(cols, rows, global, text) }
+        prefs.gridColumns, prefs.gridRows, prefs.globalStyle, prefs.tileText, prefs.tileShape,
+    ) { cols, rows, global, text, shape -> GridConfig(cols, rows, global, text, shape) }
 
-    private val behavior: Flow<Behavior> = combine(prefs.gestures, prefs.profiles, ::Behavior)
+    /** Needed by the theme itself, before any screen state exists. */
+    val screenLook: StateFlow<ScreenLook> = prefs.screenLook
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ScreenLook())
+
+    private val behavior: Flow<Behavior> = combine(prefs.gestures, prefs.profiles, prefs.screenLook, ::Behavior)
 
     private val searchState: Flow<SearchState> = combine(_searchQuery, _isSearchActive) { q, a ->
         SearchState(q, a)
@@ -217,6 +231,8 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
             gestures = behavior.gestures,
             globalStyle = config.globalStyle,
             tileText = config.tileText,
+            tileShape = config.tileShape,
+            screen = behavior.screen,
             profiles = behavior.profiles,
             apps = apps,
             hiddenApps = apps.filter { it.key in hidden },
@@ -386,6 +402,12 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
     fun setGlobalTexture(texture: String?) { launchLogged { prefs.setGlobalTexture(texture) } }
     fun applyGlobalStyleToAllTiles()       { launchLogged { prefs.applyGlobalStyleToAllTiles() } }
     fun setTileText(text: TileText)        { launchLogged { prefs.setTileText(text) } }
+    fun setTileShape(shape: TileShape)     { launchLogged { prefs.setTileShape(shape) } }
+    fun setHaptics(enabled: Boolean)       { launchLogged { prefs.setHaptics(enabled) } }
+    fun applyPreset(preset: LookPreset)    { launchLogged { prefs.applyPreset(preset) } }
+    fun setScreenBackground(dark: Boolean, color: Int?) {
+        launchLogged { prefs.setScreenBackground(dark, color) }
+    }
 
     fun removeTile(id: String) {
         launchLogged {

@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.mlg.quedalle.R
 import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
+import dev.mlg.quedalle.ui.theme.LocalTileShape
+import dev.mlg.quedalle.ui.theme.tileLabelStyle
 
 @Composable
 fun SearchField(
@@ -54,7 +56,7 @@ fun SearchField(
             focusedContainerColor   = palette.fieldFocused,
             unfocusedContainerColor = palette.surfaceDim,
         ),
-        shape = RoundedCornerShape(14.dp),
-        textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
+        shape = RoundedCornerShape((LocalTileShape.current.cornerDp * 1.4f).dp),
+        textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, fontFamily = tileLabelStyle(palette.textStrong).fontFamily),
     )
 }

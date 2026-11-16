@@ -1,6 +1,7 @@
-• Shortcut tiles: pin an app's shortcut, a contact or a web link
+• Shortcut tiles: an app's shortcut, a contact or a web link
 • Info tiles: time, date, battery, next alarm — plain text
 • Layouts: several grids to switch between
-• Gestures: swipe down, swipe up and double tap, each bound to an action or an app
-• Private space (Android 15+): its apps show only while unlocked
-• Long-press empty space to open the home menu
+• Gestures: swipe down, swipe up, double tap
+• Private space (Android 15+)
+• Look: corners, spacing, font, letter case, text position, outline tiles, screen background, 4 ready-made looks
+• Tiles shrink slightly when pressed; settings sorted into pages

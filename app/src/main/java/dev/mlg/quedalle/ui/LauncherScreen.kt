@@ -51,6 +51,7 @@ import dev.mlg.quedalle.model.Gesture
 import dev.mlg.quedalle.model.GestureAction
 import dev.mlg.quedalle.model.TileItem
 import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
+import dev.mlg.quedalle.ui.theme.LocalTileShape
 import dev.mlg.quedalle.ui.theme.LocalTileText
 import dev.mlg.quedalle.ui.theme.QuedalleColors
 import dev.mlg.quedalle.viewmodel.LauncherUiState
@@ -63,7 +64,10 @@ private val SwipeThreshold = 100.dp
 @Composable
 fun LauncherScreen(vm: LauncherViewModel) {
     val state by vm.uiState.collectAsStateWithLifecycle()
-    CompositionLocalProvider(LocalTileText provides state.tileText) {
+    CompositionLocalProvider(
+        LocalTileText provides state.tileText,
+        LocalTileShape provides state.tileShape,
+    ) {
         LauncherContent(vm, state)
     }
 }
@@ -209,6 +213,7 @@ private fun LauncherContent(vm: LauncherViewModel, state: LauncherUiState) {
                                 },
                                 onTileLongClick = { sheetTileId = it.id },
                                 modifier = Modifier.fillMaxSize(),
+                                haptics = state.screen.haptics,
                             )
 
                         else ->
@@ -223,6 +228,7 @@ private fun LauncherContent(vm: LauncherViewModel, state: LauncherUiState) {
                                     onTileClick = vm::openTile,
                                     onTileLongClick = { sheetTileId = it.id },
                                     onSaveOrder = vm::saveTileOrder,
+                                    haptics = state.screen.haptics,
                                     modifier = Modifier.fillMaxSize(),
                                 )
                             }

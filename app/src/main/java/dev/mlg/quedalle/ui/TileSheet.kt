@@ -60,7 +60,10 @@ import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
 import dev.mlg.quedalle.ui.theme.QuedalleColors
 import dev.mlg.quedalle.ui.theme.Textures
 import dev.mlg.quedalle.ui.theme.resolveTileColor
+import dev.mlg.quedalle.ui.theme.tileCorners
+import dev.mlg.quedalle.ui.theme.tileLabel
 import dev.mlg.quedalle.ui.theme.tileLabelAlignment
+import dev.mlg.quedalle.ui.theme.tileSurface
 import dev.mlg.quedalle.ui.theme.tileLabelStyle
 import dev.mlg.quedalle.ui.theme.resolveTileTextColor
 import dev.mlg.quedalle.viewmodel.LauncherUiState
@@ -175,16 +178,16 @@ private fun StyledTileEditor(
                         innerTextField()
                     }
                 },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 6.dp),
             )
         } else {
             Text(
                 // Tiles that cannot be renamed show live text (clock, battery…).
-                text = if (onRename == null) text else name.ifBlank { placeholder },
+                text = tileLabel(if (onRename == null) text else name.ifBlank { placeholder }),
                 style = tileLabelStyle(previewText),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 6.dp),
             )
         }
     }
@@ -392,15 +395,13 @@ private fun TilePreviewCard(
     content: @Composable (previewText: Color) -> Unit,
 ) {
     val base = resolveTileColor(background)
-    val brush = Textures.brush(texture, base)
     val previewText = resolveTileTextColor(TileStyle(background, textColor, texture), base)
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         Box(
             modifier = Modifier
                 .size(width = 168.dp, height = 84.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .then(if (brush != null) Modifier.background(brush) else Modifier.background(base)),
-            contentAlignment = Alignment.Center,
+                .tileSurface(texture, base, tileCorners()),
+            contentAlignment = tileLabelAlignment(),
         ) {
             content(previewText)
 

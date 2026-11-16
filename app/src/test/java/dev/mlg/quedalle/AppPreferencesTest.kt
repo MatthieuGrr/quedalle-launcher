@@ -11,7 +11,15 @@ import dev.mlg.quedalle.data.TYPE_SPACER
 import dev.mlg.quedalle.data.TileDef
 import dev.mlg.quedalle.model.Gesture
 import dev.mlg.quedalle.model.GestureAction
+import dev.mlg.quedalle.model.LookPreset
+import dev.mlg.quedalle.model.ScreenLook
+import dev.mlg.quedalle.model.TextCase
+import dev.mlg.quedalle.model.ThemeMode
+import dev.mlg.quedalle.model.TileFont
+import dev.mlg.quedalle.model.TileShape
+import dev.mlg.quedalle.model.TileStyle
 import dev.mlg.quedalle.model.TileText
+import dev.mlg.quedalle.model.VerticalAnchor
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -334,5 +342,77 @@ class AppPreferencesTest {
         assertEquals(TileDef(TYPE_APP, "a", pkg = "a"), all["a"])
         assertEquals(null, all["in_1"]!!.color)
         assertEquals(7, all["sp_1"]!!.color)
+    }
+
+    // ── Look ─────────────────────────────────────────────────────────────────
+
+    @Test
+    fun `shape is clamped and stored`() = runBlocking {
+        assertEquals(TileShape(), prefs.tileShape.first())
+        prefs.setTileShape(TileShape(cornerDp = 99, gapDp = -3, marginDp = 0))
+        assertEquals(TileShape(TileShape.MAX_CORNER, 0, 0), prefs.tileShape.first())
+    }
+
+    @Test
+    fun `each theme keeps its own background`() = runBlocking {
+        prefs.setScreenBackground(dark = true, color = 0x101010)
+        prefs.setScreenBackground(dark = false, color = 0xF0F0F0)
+        prefs.setScreenBackground(dark = true, color = null)
+        assertEquals(ScreenLook(backgroundDark = null, backgroundLight = 0xF0F0F0), prefs.screenLook.first())
+    }
+
+    @Test
+    fun `a look sets everything but keeps text size, overrides and the other theme`() = runBlocking {
+        pin("a")
+        prefs.updateTile("a") { it.copy(color = 0x123456) }
+        prefs.setTileText(TileText(sizeSp = 18))
+        prefs.setScreenBackground(dark = true, color = 0x101010)
+        val paper = LookPreset.all.first { it.key == LookPreset.PAPER }
+
+        prefs.applyPreset(paper)
+
+        assertEquals(ThemeMode.LIGHT, prefs.themeMode.first())
+        assertEquals(paper.style, prefs.globalStyle.first())
+        assertEquals(paper.shape, prefs.tileShape.first())
+        assertEquals(paper.text.copy(sizeSp = 18), prefs.tileText.first())
+        assertEquals(ScreenLook(backgroundDark = 0x101010, backgroundLight = paper.background), prefs.screenLook.first())
+        assertEquals(0x123456, prefs.tileDefinitions.first().single().color)
+    }
+
+    @Test
+    fun `the first look restores the defaults`() = runBlocking {
+        prefs.applyPreset(LookPreset.all.first { it.key == LookPreset.MOSAIC })
+        prefs.applyPreset(LookPreset.all.first())
+        assertEquals(TileStyle(), prefs.globalStyle.first())
+        assertEquals(TileShape(), prefs.tileShape.first())
+        assertEquals(TileText(), prefs.tileText.first())
+    }
+
+    @Test
+    fun `the whole look survives a backup, an old backup resets it`() = runBlocking {
+        val text = TileText(14, true, true, TileFont.MONO, TextCase.UPPER, VerticalAnchor.BOTTOM)
+        val shape = TileShape(0, 2, 0)
+        prefs.setTileText(text)
+        prefs.setTileShape(shape)
+        prefs.setScreenBackground(dark = false, color = 0xF2EFE9)
+        prefs.setHaptics(true)
+        val backup = prefs.exportBackup()
+
+        assertTrue(prefs.importBackup("""{"columns":3,"rows":4}"""))
+        assertEquals(TileText(), prefs.tileText.first())
+        assertEquals(TileShape(), prefs.tileShape.first())
+        assertEquals(ScreenLook(), prefs.screenLook.first())
+
+        assertTrue(prefs.importBackup(backup))
+        assertEquals(text, prefs.tileText.first())
+        assertEquals(shape, prefs.tileShape.first())
+        assertEquals(ScreenLook(backgroundLight = 0xF2EFE9, haptics = true), prefs.screenLook.first())
+    }
+
+    @Test
+    fun `letter case only changes what is drawn`() {
+        assertEquals("CAFÉ", TileText(case = TextCase.UPPER).display("Café"))
+        assertEquals("café", TileText(case = TextCase.LOWER).display("Café"))
+        assertEquals("Café", TileText().display("Café"))
     }
 }

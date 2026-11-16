@@ -1,10 +1,14 @@
 package dev.mlg.quedalle.ui
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,6 +40,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,14 +52,14 @@ import dev.mlg.quedalle.model.TileStyle
 import dev.mlg.quedalle.model.fullRowFlags
 import dev.mlg.quedalle.model.gridPositions
 import dev.mlg.quedalle.ui.theme.QuedalleColors
-import dev.mlg.quedalle.ui.theme.Textures
+import dev.mlg.quedalle.ui.theme.LocalTileShape
+import dev.mlg.quedalle.ui.theme.tileCorners
+import dev.mlg.quedalle.ui.theme.tileLabel
+import dev.mlg.quedalle.ui.theme.tileSurface
 import dev.mlg.quedalle.ui.theme.resolveTileColor
 import dev.mlg.quedalle.ui.theme.tileLabelAlignment
 import dev.mlg.quedalle.ui.theme.tileLabelStyle
 import dev.mlg.quedalle.ui.theme.resolveTileTextColor
-
-internal val GridPad   = 12.dp
-internal val GridSpace = 8.dp
 
 /** Height of a divider row — thin, but tall enough to long-press. */
 internal val DividerRowHeight = 16.dp
@@ -68,8 +73,13 @@ fun TileGrid(
     onTileClick: (TileItem) -> Unit,
     onTileLongClick: (TileItem) -> Unit,
     modifier: Modifier = Modifier,
+    haptics: Boolean = false,
     onSaveOrder: ((List<TileItem>) -> Unit)? = null,
 ) {
+    val shape = LocalTileShape.current
+    val gridPad = shape.marginDp.dp
+    val gridSpace = shape.gapDp.dp
+    val view = LocalView.current
     val localTiles = remember { tiles.toMutableStateList() }
 
     var draggingKey by remember { mutableStateOf<String?>(null) }
@@ -86,12 +96,12 @@ fun TileGrid(
     BoxWithConstraints(modifier = modifier) {
         val density = LocalDensity.current
 
-        val cellWDp = (maxWidth - GridPad * 2 - GridSpace * (columns - 1)) / columns
+        val cellWDp = (maxWidth - gridPad * 2 - gridSpace * (columns - 1)) / columns
         val cellHDp: Dp = if (rows != null) {
             // Dividers occupy their own thin rows: subtract their height (and
             // row spacing) so the full-height tile rows exactly fill the rest.
             val dividerCount = tiles.count { it is TileItem.Divider }
-            val totalRowGaps = GridSpace * (rows + dividerCount - 1).coerceAtLeast(0)
+            val totalRowGaps = gridSpace * (rows + dividerCount - 1).coerceAtLeast(0)
             (maxHeight - DividerRowHeight * dividerCount - totalRowGaps) / rows
         } else {
             cellWDp / 1.4f
@@ -99,19 +109,19 @@ fun TileGrid(
 
         val cellWPx = with(density) { cellWDp.toPx() }
         val cellHPx = with(density) { cellHDp.toPx() }
-        val spacePx = with(density) { GridSpace.toPx() }
+        val spacePx = with(density) { gridSpace.toPx() }
         val cellW   = cellWPx + spacePx
         val cellH   = cellHPx + spacePx
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(columns),
             contentPadding = PaddingValues(
-                start  = GridPad,
-                end    = GridPad,
+                start  = gridPad,
+                end    = gridPad,
                 bottom = if (rows == null) 16.dp else 0.dp,
             ),
-            horizontalArrangement = Arrangement.spacedBy(GridSpace),
-            verticalArrangement   = Arrangement.spacedBy(GridSpace),
+            horizontalArrangement = Arrangement.spacedBy(gridSpace),
+            verticalArrangement   = Arrangement.spacedBy(gridSpace),
             userScrollEnabled = rows == null,
             modifier = Modifier.fillMaxSize(),
         ) {
@@ -181,31 +191,49 @@ fun TileGrid(
                         )
                     }
                 } else {
-                    Modifier.combinedClickable(
-                        onClick     = { onTileClick(tile) },
-                        onLongClick = { onTileLongClick(tile) },
+                    // Pressing a tile shrinks it slightly instead of
+                    // flashing a ripple over its colors.
+                    val interaction = remember { MutableInteractionSource() }
+                    val pressed by interaction.collectIsPressedAsState()
+                    val scale by animateFloatAsState(
+                        targetValue = if (pressed) 0.95f else 1f,
+                        animationSpec = tween(if (pressed) 60 else 160),
+                        label = "press",
                     )
+                    Modifier
+                        .graphicsLayer { scaleX = scale; scaleY = scale }
+                        .combinedClickable(
+                            interactionSource = interaction,
+                            indication = null,
+                            onClick = {
+                                if (haptics) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                onTileClick(tile)
+                            },
+                            onLongClick = { onTileLongClick(tile) },
+                        )
                 }
 
-                TileCard(tile, isDragging, cellHDp, visualModifier.then(gestureModifier))
+                TileCard(tile, isDragging, cellHDp, gridPad, visualModifier.then(gestureModifier))
             }
         }
     }
 }
 
 @Composable
-private fun TileCard(tile: TileItem, isDragging: Boolean, height: Dp, modifier: Modifier = Modifier) {
+private fun TileCard(
+    tile: TileItem, isDragging: Boolean, height: Dp, dividerInset: Dp, modifier: Modifier = Modifier,
+) {
     when (tile) {
         is TileItem.App      -> LabelCard(tile.info.displayLabel, tile.style, isDragging, height, modifier)
         is TileItem.Shortcut -> LabelCard(tile.label, tile.style, isDragging, height, modifier)
         is TileItem.Info     -> LabelCard(infoText(tile.kind), tile.style, isDragging, height, modifier)
         is TileItem.Spacer  -> SpacerCard(tile, isDragging, height, modifier)
-        is TileItem.Divider -> DividerCard(tile, isDragging, modifier)
+        is TileItem.Divider -> DividerCard(tile, isDragging, dividerInset, modifier)
     }
 }
 
 @Composable
-private fun DividerCard(tile: TileItem.Divider, isDragging: Boolean, modifier: Modifier) {
+private fun DividerCard(tile: TileItem.Divider, isDragging: Boolean, inset: Dp, modifier: Modifier) {
     val lineColor by animateColorAsState(
         targetValue = if (isDragging) MaterialTheme.colorScheme.secondaryContainer
                       else resolveTileColor(tile.color),
@@ -219,7 +247,7 @@ private fun DividerCard(tile: TileItem.Divider, isDragging: Boolean, modifier: M
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = GridPad)
+                .padding(horizontal = inset)
                 .height(1.dp)
                 .background(lineColor),
         )
@@ -230,7 +258,6 @@ private fun DividerCard(tile: TileItem.Divider, isDragging: Boolean, modifier: M
 @Composable
 private fun LabelCard(label: String, style: TileStyle, isDragging: Boolean, height: Dp, modifier: Modifier) {
     val baseBg = resolveTileColor(style.background ?: QuedalleColors.TileAppColor)
-    val brush = Textures.brush(style.texture, baseBg)
     val bgColor by animateColorAsState(
         targetValue = if (isDragging) MaterialTheme.colorScheme.secondaryContainer
                       else baseBg,
@@ -245,19 +272,15 @@ private fun LabelCard(label: String, style: TileStyle, isDragging: Boolean, heig
     )
     Box(
         modifier = modifier.fillMaxWidth().height(height)
-            .clip(RoundedCornerShape(10.dp))
-            .then(
-                if (!isDragging && brush != null) Modifier.background(brush)
-                else Modifier.background(bgColor)
-            ),
+            .tileSurface(if (isDragging) null else style.texture, baseBg, tileCorners(), flat = bgColor),
         contentAlignment = tileLabelAlignment(),
     ) {
         Text(
-            text = label,
+            text = tileLabel(label),
             style = tileLabelStyle(textColor),
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
         )
     }
 }
@@ -265,7 +288,6 @@ private fun LabelCard(label: String, style: TileStyle, isDragging: Boolean, heig
 @Composable
 private fun SpacerCard(tile: TileItem.Spacer, isDragging: Boolean, height: Dp, modifier: Modifier) {
     val baseBg = resolveTileColor(tile.color)
-    val brush = Textures.brush(tile.texture, baseBg)
     val bgColor by animateColorAsState(
         targetValue = if (isDragging) MaterialTheme.colorScheme.secondaryContainer
                       else baseBg,
@@ -274,10 +296,6 @@ private fun SpacerCard(tile: TileItem.Spacer, isDragging: Boolean, height: Dp, m
     )
     Box(
         modifier = modifier.fillMaxWidth().height(height)
-            .clip(RoundedCornerShape(10.dp))
-            .then(
-                if (!isDragging && brush != null) Modifier.background(brush)
-                else Modifier.background(bgColor)
-            ),
+            .tileSurface(if (isDragging) null else tile.texture, baseBg, tileCorners(), flat = bgColor),
     )
 }

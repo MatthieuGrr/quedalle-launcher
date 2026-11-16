@@ -13,9 +13,11 @@ A minimal, tile-based Android home screen launcher built with Jetpack Compose.
 - **Divider tiles** — thin horizontal lines as visual separators
 - **Drag & drop** — long-press any tile to reorder
 - **Layouts** — several grids (work, weekend…) you switch between by hand
-- **Appearance** — global tile style plus per-tile overrides: background & text colors (presets or custom HSL) and textures (iridescent, gradient, glass), edited live from a single long-press sheet
-- **Tile text** — adjustable size, centered or left-aligned, normal or bold
-- **Light & dark theme** — follows the system, or forced in settings
+- **Appearance** — global tile style plus per-tile overrides: background & text colors (presets or custom HSL) and textures (outline, iridescent, gradient, glass), edited live from a single long-press sheet
+- **Shape** — corner radius, spacing between tiles and outer margin, down to a square edge-to-edge mosaic
+- **Tile text** — size, font (system, serif, monospace), letter case, position in the tile, weight
+- **Ready-made looks** — Black, Paper, Outline, Mosaic: one tap sets it all
+- **Light & dark theme** — follows the system, or forced in settings, with a choice of screen background
 - **Search** — accent-insensitive inline search of installed apps
 - **Rename tiles** — give pinned apps your own labels
 - **Hide apps** — keep apps out of search results
