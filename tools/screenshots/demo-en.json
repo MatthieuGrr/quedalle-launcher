@@ -1,0 +1,701 @@
+{
+ "version": 2,
+ "columns": 3,
+ "rows": 6,
+ "swipeDownNotifications": true,
+ "theme": "dark",
+ "tileTextSize": 13,
+ "hidden": [],
+ "tiles": [
+  {
+   "t": "link",
+   "id": "ln_demo_01",
+   "l": "Phone",
+   "uri": "https://example.org/phone"
+  },
+  {
+   "t": "link",
+   "id": "ln_demo_02",
+   "l": "Messages",
+   "uri": "https://example.org/messages"
+  },
+  {
+   "t": "link",
+   "id": "ln_demo_03",
+   "l": "Contacts",
+   "uri": "https://example.org/contacts"
+  },
+  {
+   "t": "link",
+   "id": "ln_demo_04",
+   "l": "Camera",
+   "uri": "https://example.org/camera"
+  },
+  {
+   "t": "link",
+   "id": "ln_demo_05",
+   "l": "Gallery",
+   "uri": "https://example.org/gallery"
+  },
+  {
+   "t": "link",
+   "id": "ln_demo_06",
+   "l": "Maps",
+   "uri": "https://example.org/maps",
+   "c": -15049664
+  },
+  {
+   "t": "divider",
+   "id": "dv_demo_07",
+   "c": -14013910
+  },
+  {
+   "t": "link",
+   "id": "ln_demo_08",
+   "l": "Mail",
+   "uri": "https://example.org/mail"
+  },
+  {
+   "t": "link",
+   "id": "ln_demo_09",
+   "l": "Calendar",
+   "uri": "https://example.org/calendar"
+  },
+  {
+   "t": "link",
+   "id": "ln_demo_10",
+   "l": "Notes",
+   "uri": "https://example.org/notes"
+  },
+  {
+   "t": "link",
+   "id": "ln_demo_11",
+   "l": "Browser",
+   "uri": "https://example.org/browser"
+  },
+  {
+   "t": "link",
+   "id": "ln_demo_12",
+   "l": "Music",
+   "uri": "https://example.org/music",
+   "c": -8758768
+  },
+  {
+   "t": "link",
+   "id": "ln_demo_13",
+   "l": "Podcasts",
+   "uri": "https://example.org/podcasts"
+  },
+  {
+   "t": "divider",
+   "id": "dv_demo_14",
+   "c": -14013910
+  },
+  {
+   "t": "link",
+   "id": "ln_demo_15",
+   "l": "Files",
+   "uri": "https://example.org/files"
+  },
+  {
+   "t": "link",
+   "id": "ln_demo_16",
+   "l": "Calculator",
+   "uri": "https://example.org/calc"
+  },
+  {
+   "t": "link",
+   "id": "ln_demo_17",
+   "l": "Settings",
+   "uri": "https://example.org/settings"
+  },
+  {
+   "t": "link",
+   "id": "ln_demo_18",
+   "l": "F-Droid",
+   "uri": "https://example.org/fdroid",
+   "c": -15774591
+  },
+  {
+   "t": "link",
+   "id": "ln_demo_19",
+   "l": "Terminal",
+   "uri": "https://example.org/terminal"
+  }
+ ],
+ "profiles": [
+  {
+   "id": "pf_demo_1",
+   "name": "1 Home",
+   "columns": 3,
+   "rows": 6,
+   "tiles": [
+    {
+     "t": "link",
+     "id": "ln_demo_01",
+     "l": "Phone",
+     "uri": "https://example.org/phone"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_02",
+     "l": "Messages",
+     "uri": "https://example.org/messages"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_03",
+     "l": "Contacts",
+     "uri": "https://example.org/contacts"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_04",
+     "l": "Camera",
+     "uri": "https://example.org/camera"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_05",
+     "l": "Gallery",
+     "uri": "https://example.org/gallery"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_06",
+     "l": "Maps",
+     "uri": "https://example.org/maps",
+     "c": -15049664
+    },
+    {
+     "t": "divider",
+     "id": "dv_demo_07",
+     "c": -14013910
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_08",
+     "l": "Mail",
+     "uri": "https://example.org/mail"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_09",
+     "l": "Calendar",
+     "uri": "https://example.org/calendar"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_10",
+     "l": "Notes",
+     "uri": "https://example.org/notes"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_11",
+     "l": "Browser",
+     "uri": "https://example.org/browser"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_12",
+     "l": "Music",
+     "uri": "https://example.org/music",
+     "c": -8758768
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_13",
+     "l": "Podcasts",
+     "uri": "https://example.org/podcasts"
+    },
+    {
+     "t": "divider",
+     "id": "dv_demo_14",
+     "c": -14013910
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_15",
+     "l": "Files",
+     "uri": "https://example.org/files"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_16",
+     "l": "Calculator",
+     "uri": "https://example.org/calc"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_17",
+     "l": "Settings",
+     "uri": "https://example.org/settings"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_18",
+     "l": "F-Droid",
+     "uri": "https://example.org/fdroid",
+     "c": -15774591
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_19",
+     "l": "Terminal",
+     "uri": "https://example.org/terminal"
+    }
+   ]
+  },
+  {
+   "id": "pf_demo_2",
+   "name": "2 Paper",
+   "columns": 2,
+   "rows": 6,
+   "tiles": [
+    {
+     "t": "link",
+     "id": "ln_demo_20",
+     "l": "Phone",
+     "uri": "https://example.org/phone"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_21",
+     "l": "Messages",
+     "uri": "https://example.org/messages"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_22",
+     "l": "Mail",
+     "uri": "https://example.org/mail"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_23",
+     "l": "Calendar",
+     "uri": "https://example.org/calendar"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_24",
+     "l": "Notes",
+     "uri": "https://example.org/notes",
+     "c": -12965092
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_25",
+     "l": "Reader",
+     "uri": "https://example.org/books"
+    },
+    {
+     "t": "divider",
+     "id": "dv_demo_26",
+     "c": -14013910
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_27",
+     "l": "Camera",
+     "uri": "https://example.org/camera"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_28",
+     "l": "Gallery",
+     "uri": "https://example.org/gallery"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_29",
+     "l": "Maps",
+     "uri": "https://example.org/maps"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_30",
+     "l": "Trains",
+     "uri": "https://example.org/train"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_31",
+     "l": "Music",
+     "uri": "https://example.org/music"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_32",
+     "l": "Podcasts",
+     "uri": "https://example.org/podcasts"
+    }
+   ]
+  },
+  {
+   "id": "pf_demo_3",
+   "name": "3 Mosaic",
+   "columns": 3,
+   "rows": 6,
+   "tiles": [
+    {
+     "t": "link",
+     "id": "ln_demo_33",
+     "l": "Phone",
+     "uri": "https://example.org/phone",
+     "c": -15774591
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_34",
+     "l": "Messages",
+     "uri": "https://example.org/messages"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_35",
+     "l": "Contacts",
+     "uri": "https://example.org/contacts"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_36",
+     "l": "Camera",
+     "uri": "https://example.org/camera"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_37",
+     "l": "Gallery",
+     "uri": "https://example.org/gallery",
+     "c": -9756897
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_38",
+     "l": "Maps",
+     "uri": "https://example.org/maps"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_39",
+     "l": "Mail",
+     "uri": "https://example.org/mail"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_40",
+     "l": "Calendar",
+     "uri": "https://example.org/calendar"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_41",
+     "l": "Notes",
+     "uri": "https://example.org/notes",
+     "c": -15049664
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_42",
+     "l": "Browser",
+     "uri": "https://example.org/browser"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_43",
+     "l": "Music",
+     "uri": "https://example.org/music"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_44",
+     "l": "Podcasts",
+     "uri": "https://example.org/podcasts"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_45",
+     "l": "Files",
+     "uri": "https://example.org/files",
+     "c": -8758768
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_46",
+     "l": "Calculator",
+     "uri": "https://example.org/calc"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_47",
+     "l": "Settings",
+     "uri": "https://example.org/settings"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_48",
+     "l": "F-Droid",
+     "uri": "https://example.org/fdroid"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_49",
+     "l": "Weather",
+     "uri": "https://example.org/weather"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_50",
+     "l": "Terminal",
+     "uri": "https://example.org/terminal",
+     "c": -13951942
+    }
+   ]
+  },
+  {
+   "id": "pf_demo_4",
+   "name": "4 Outline",
+   "columns": 3,
+   "rows": 5,
+   "tiles": [
+    {
+     "t": "link",
+     "id": "ln_demo_51",
+     "l": "Phone",
+     "uri": "https://example.org/phone"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_52",
+     "l": "Messages",
+     "uri": "https://example.org/messages"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_53",
+     "l": "Contacts",
+     "uri": "https://example.org/contacts"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_54",
+     "l": "Camera",
+     "uri": "https://example.org/camera"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_55",
+     "l": "Gallery",
+     "uri": "https://example.org/gallery",
+     "c": -10177034,
+     "fc": -10177034
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_56",
+     "l": "Maps",
+     "uri": "https://example.org/maps"
+    },
+    {
+     "t": "divider",
+     "id": "dv_demo_57",
+     "c": -14013910
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_58",
+     "l": "Mail",
+     "uri": "https://example.org/mail"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_59",
+     "l": "Calendar",
+     "uri": "https://example.org/calendar"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_60",
+     "l": "Notes",
+     "uri": "https://example.org/notes",
+     "c": -18611,
+     "fc": -18611
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_61",
+     "l": "Browser",
+     "uri": "https://example.org/browser"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_62",
+     "l": "Music",
+     "uri": "https://example.org/music"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_63",
+     "l": "Podcasts",
+     "uri": "https://example.org/podcasts"
+    },
+    {
+     "t": "divider",
+     "id": "dv_demo_64",
+     "c": -14013910
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_65",
+     "l": "Files",
+     "uri": "https://example.org/files"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_66",
+     "l": "Calculator",
+     "uri": "https://example.org/calc"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_67",
+     "l": "Terminal",
+     "uri": "https://example.org/terminal"
+    }
+   ]
+  },
+  {
+   "id": "pf_demo_5",
+   "name": "5 Info",
+   "columns": 3,
+   "rows": 6,
+   "tiles": [
+    {
+     "t": "info",
+     "id": "in_demo_68",
+     "k": "clock",
+     "c": -14931142
+    },
+    {
+     "t": "info",
+     "id": "in_demo_69",
+     "k": "date",
+     "c": -14931142
+    },
+    {
+     "t": "info",
+     "id": "in_demo_70",
+     "k": "battery",
+     "c": -14931142
+    },
+    {
+     "t": "info",
+     "id": "in_demo_71",
+     "k": "alarm"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_72",
+     "l": "Weather",
+     "uri": "https://example.org/weather"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_73",
+     "l": "Calendar",
+     "uri": "https://example.org/calendar"
+    },
+    {
+     "t": "divider",
+     "id": "dv_demo_74",
+     "c": -14013910
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_75",
+     "l": "Alice",
+     "uri": "https://example.org/alice",
+     "tx": "iris"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_76",
+     "l": "Home",
+     "uri": "https://example.org/home",
+     "tx": "gradient",
+     "c": -15774591
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_77",
+     "l": "Wikipedia",
+     "uri": "https://example.org/wiki",
+     "tx": "glass",
+     "c": -15049664
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_78",
+     "l": "News",
+     "uri": "https://example.org/news",
+     "tx": "outline"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_79",
+     "l": "Trains",
+     "uri": "https://example.org/train"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_80",
+     "l": "Bank",
+     "uri": "https://example.org/bank"
+    },
+    {
+     "t": "divider",
+     "id": "dv_demo_81",
+     "c": -14013910
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_82",
+     "l": "Phone",
+     "uri": "https://example.org/phone"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_83",
+     "l": "Messages",
+     "uri": "https://example.org/messages"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_84",
+     "l": "Camera",
+     "uri": "https://example.org/camera"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_85",
+     "l": "Browser",
+     "uri": "https://example.org/browser"
+    },
+    {
+     "t": "link",
+     "id": "ln_demo_86",
+     "l": "Music",
+     "uri": "https://example.org/music"
+    },
+    {
+     "t": "spacer",
+     "id": "sp_demo_87",
+     "c": 0
+    }
+   ]
+  }
+ ],
+ "activeProfile": "pf_demo_1"
+}

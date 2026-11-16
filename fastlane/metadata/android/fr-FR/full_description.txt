@@ -1,4 +1,4 @@
-J'en avais assez des launchers qui ressemblent à un tableau de bord d'avion. J'en voulais un qui lance juste des applis. J'ai donc fait Quedalle:
+J'en avais assez des launchers qui ressemblent à un tableau de bord d'avion. J'en voulais un qui lance juste des applis. J'ai donc fait Quedalle :
 
 Quedalle en widgets inutiles.
 Quedalle en animations tape-à-l'œil.
@@ -17,23 +17,31 @@ Juste un lanceur. Une grille de tuiles. Vos applis. C'est tout.
 TUILES
 
 - Tuiles d'apps — texte uniquement, renommables
-- Tuiles Spacer — tuiles colorées pour structurer visuellement votre grille
-- Séparateurs — lignes fines entre les groupes de tuiles
+- Tuiles-raccourcis — un raccourci d'app, un contact ou un lien web
+- Tuiles d'information — heure, date, batterie, prochain réveil, en texte
+- Tuiles vides et séparateurs pour structurer votre grille
 - Un écran d'accueil fini : ce qui tient dans votre grille, rien de plus
+- Plusieurs dispositions (travail, week-end…) entre lesquelles basculer
 
-PERSONNALISATION
+APPARENCE
+
+- Couleurs et textures, par tuile ou pour toutes : aplat, contour, irisé, dégradé, verre
+- Coins, espacement et marge, jusqu'à la mosaïque carrée bord à bord
+- Taille, police, casse et position du texte
+- Thème clair ou sombre, avec le choix du fond
+- Quatre thèmes prêts à l'emploi : Noir, Papier, Contour, Mosaïque
+
+AU QUOTIDIEN
 
 - Glisser-déposer pour réorganiser les tuiles
-- 12 couleurs prédéfinies par tuile, plus couleur-app et transparent
-- Thème clair ou sombre, suivant le système
 - Recherche d'applications insensible aux accents
 - Masquage d'applications de la recherche
-- Geste optionnel : balayage vers le bas pour le volet de notifications
-- Export/import de la disposition au format JSON
+- Gestes : balayage vers le bas, vers le haut, double appui
+- Profil professionnel et espace privé (Android 15+) pris en charge
+- Export/import de toute la configuration au format JSON
 
 CONFIDENTIALITÉ
 
-- Aucune permission internet, aucun accès aux notifications
+- Aucune permission internet, aucun accès aux notifications ni aux contacts
 - Aucun analytics, cloud ou synchronisation
-- Applications du profil professionnel prises en charge
 - Code source ouvert sous licence GPL-3.0
