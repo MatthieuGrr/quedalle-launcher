@@ -1,6 +1,6 @@
-• Tuiles-raccourcis : épinglez un raccourci d'app, un contact ou un lien web
+• Tuiles-raccourcis : raccourci d'app, contact ou lien web
 • Tuiles d'information : heure, date, batterie, prochain réveil — en texte
 • Dispositions : plusieurs grilles entre lesquelles basculer
-• Gestes : balayage vers le bas, vers le haut et double appui, chacun lié à une action ou une app (verrouillage de l'écran en option, via un service d'accessibilité à activer)
+• Gestes : balayage vers le bas, vers le haut et double appui, liés à une action ou une app (verrouillage de l'écran en option, via un service d'accessibilité à activer)
 • Espace privé (Android 15+) : ses apps n'apparaissent que déverrouillé
 • Appui long sur l'espace vide pour ouvrir le menu d'accueil
