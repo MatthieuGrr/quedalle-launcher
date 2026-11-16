@@ -1,5 +1,13 @@
 package dev.mlg.quedalle.ui.theme
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.dp
+import dev.mlg.quedalle.model.TEXTURE_OUTLINE
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -16,9 +24,11 @@ object Textures {
     const val IRIDESCENT = "iris"
     const val GRADIENT = "gradient"
     const val GLASS = "glass"
+    /** No fill at all, only a thin stroke: drawn by [tileSurface], not by a brush. */
+    const val OUTLINE = TEXTURE_OUTLINE
 
     /** All selectable values, in picker order; null = flat color. */
-    val all: List<String?> = listOf(null, IRIDESCENT, GRADIENT, GLASS)
+    val all: List<String?> = listOf(null, OUTLINE, IRIDESCENT, GRADIENT, GLASS)
 
     /** Soft pastel stops for the iridescent effect (independent of base color). */
     private val iridescentStops = listOf(
@@ -69,4 +79,22 @@ object Textures {
         GLASS -> blendArgb(base, 0xFFFFFFFF.toInt(), 0.12f)
         else -> base
     }
+}
+
+/**
+ * Clips to [shape] and paints a tile: its texture over [base], or the
+ * plain [flat] color when there is none (callers animate [flat] while a
+ * tile is dragged).
+ */
+@Composable
+fun Modifier.tileSurface(texture: String?, base: Color, shape: Shape, flat: Color = base): Modifier {
+    if (texture == Textures.OUTLINE) {
+        // The tile color becomes the stroke; the theme's own tile color
+        // would vanish against the background, so it gets a visible grey.
+        val palette = LocalQuedallePalette.current
+        val stroke = if (base.alpha < 0.5f || base == palette.card) palette.textMuted else base
+        return clip(shape).border(1.dp, stroke, shape)
+    }
+    val brush = Textures.brush(texture, base)
+    return clip(shape).then(if (brush != null) Modifier.background(brush) else Modifier.background(flat))
 }

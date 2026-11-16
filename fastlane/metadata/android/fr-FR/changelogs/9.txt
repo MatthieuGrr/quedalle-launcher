@@ -1,0 +1,4 @@
+• Réordonner ne supprime plus les tuiles des apps momentanément indisponibles (profil pro verrouillé, app en cours de mise à jour)
+• Les tuiles des apps désinstallées sont retirées au lieu d'occuper de la place en silence dans la grille
+• Importer une sauvegarde contenant des tuiles en double ne peut plus faire planter l'écran d'accueil
+• Plus de message « rien d'épinglé » furtif au démarrage du launcher

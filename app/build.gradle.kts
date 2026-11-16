@@ -15,8 +15,8 @@ android {
         applicationId = "dev.mlg.quedalle"
         minSdk = 26
         targetSdk = 36
-        versionCode = 8
-        versionName = "2.2"
+        versionCode = 11
+        versionName = "3.0"
     }
 
     buildTypes {

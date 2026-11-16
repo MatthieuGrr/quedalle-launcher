@@ -1,0 +1,4 @@
+• Reordering no longer deletes the tiles of apps that are temporarily unavailable (locked work profile, app being updated)
+• Tiles of uninstalled apps are removed instead of silently taking up room in the grid
+• Importing a backup with duplicated tiles can no longer crash the home screen
+• No more "nothing pinned" flash when the launcher starts

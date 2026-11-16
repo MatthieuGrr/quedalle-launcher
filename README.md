@@ -7,17 +7,24 @@ A minimal, tile-based Android home screen launcher built with Jetpack Compose.
 ## Features
 
 - **App tiles** — a fixed grid of your essential apps, text only
+- **Shortcut tiles** — pin an app's shortcut (a conversation, a route), a contact or a web link
+- **Info tiles** — time, date, battery level, next alarm, as plain text
 - **Spacer tiles** — colored blank tiles to organize your grid
 - **Divider tiles** — thin horizontal lines as visual separators
 - **Drag & drop** — long-press any tile to reorder
-- **Appearance** — global tile style plus per-tile overrides: background & text colors (presets or custom HSL) and textures (iridescent, gradient, glass), edited live from a single long-press sheet
-- **Light & dark theme** — follows the system, or forced in settings
+- **Layouts** — several grids (work, weekend…) you switch between by hand
+- **Appearance** — global tile style plus per-tile overrides: background & text colors (presets or custom HSL) and textures (outline, iridescent, gradient, glass), edited live from a single long-press sheet
+- **Shape** — corner radius, spacing between tiles and outer margin, down to a square edge-to-edge mosaic
+- **Tile text** — size, font (system, serif, monospace), letter case, position in the tile, weight
+- **Ready-made looks** — Black, Paper, Outline, Mosaic: one tap sets it all
+- **Light & dark theme** — follows the system, or forced in settings, with a choice of screen background
 - **Search** — accent-insensitive inline search of installed apps
 - **Rename tiles** — give pinned apps your own labels
 - **Hide apps** — keep apps out of search results
 - **Work profile** — apps from all profiles, with badged labels
-- **Swipe down** — open the notification shade (optional)
-- **Backup** — export/import your layout as a JSON file
+- **Private space** (Android 15+) — its apps show only while it is unlocked
+- **Gestures** — swipe down, swipe up and double tap, each bound to an action or an app
+- **Backup** — export/import your layouts as a JSON file
 - **No internet, no accounts, no tracking**
 
 The home screen is intentionally finite: it holds exactly what fits the grid
@@ -45,10 +52,14 @@ Or grab the APK from the [releases page](https://github.com/MatthieuGrr/quedalle
 | Permission | Why |
 |---|---|
 | `REQUEST_DELETE_PACKAGES` | Offer "Uninstall" in the app long-press menu |
-| `EXPAND_STATUS_BAR` | Open the notification shade on the optional swipe-down gesture |
+| `EXPAND_STATUS_BAR` | Open the notification shade or quick settings from a gesture |
+| `ACCESS_HIDDEN_PROFILES` | List the apps of the Android 15 private space while it is unlocked |
 
-Both are `normal`-level permissions (auto-granted, read nothing). No internet
-permission, no notification access, no analytics.
+All three are `normal`-level permissions (auto-granted, read nothing). No internet
+permission, no contacts permission, no notification access, no analytics.
+
+**Contact tiles** use the system contact picker, which hands over the one
+contact you choose — Quedalle cannot read your address book.
 
 ## Build from source
 

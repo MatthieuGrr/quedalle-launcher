@@ -1,0 +1,7 @@
+• Shortcut tiles: an app's shortcut, a contact or a web link
+• Info tiles: time, date, battery, next alarm — plain text
+• Layouts: several grids to switch between
+• Gestures: swipe down, swipe up, double tap
+• Private space (Android 15+)
+• Look: corners, spacing, font, letter case, text position, outline tiles, screen background, 4 ready-made looks
+• Tiles shrink slightly when pressed; settings sorted into pages

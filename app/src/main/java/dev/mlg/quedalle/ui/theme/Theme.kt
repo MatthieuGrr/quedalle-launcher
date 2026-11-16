@@ -1,5 +1,23 @@
 package dev.mlg.quedalle.ui.theme
 
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
+import dev.mlg.quedalle.model.ScreenLook
+import dev.mlg.quedalle.model.TextCase
+import dev.mlg.quedalle.model.TileFont
+import dev.mlg.quedalle.model.TileShape
+import dev.mlg.quedalle.model.VerticalAnchor
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
+import dev.mlg.quedalle.model.TileText
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -82,6 +100,54 @@ val LightPalette = QuedallePalette(
 
 val LocalQuedallePalette = staticCompositionLocalOf { DarkPalette }
 
+/** Launcher-wide label settings (size, alignment, weight, font, case) of the tiles. */
+val LocalTileText = compositionLocalOf { TileText() }
+
+/** True when the dark theme is the one on screen. */
+val LocalIsDark = staticCompositionLocalOf { true }
+
+/** Launcher-wide geometry (corners, gap, margin) of the grid. */
+val LocalTileShape = compositionLocalOf { TileShape() }
+
+/** Text style of a tile label, following [LocalTileText]. */
+@Composable
+fun tileLabelStyle(color: Color): TextStyle {
+    val text = LocalTileText.current
+    return TextStyle(
+        color = color,
+        fontSize = text.sizeSp.sp,
+        lineHeight = (text.sizeSp * 1.27f).sp,
+        fontWeight = if (text.bold) FontWeight.Bold else FontWeight.Medium,
+        fontFamily = when (text.font) {
+            TileFont.SYSTEM -> FontFamily.Default
+            TileFont.SERIF -> FontFamily.Serif
+            TileFont.MONO -> FontFamily.Monospace
+        },
+        // Capitals set tight read as a block: open them up a little.
+        letterSpacing = if (text.case == TextCase.UPPER) 0.06.em else TextUnit.Unspecified,
+        textAlign = if (text.alignStart) TextAlign.Start else TextAlign.Center,
+    )
+}
+
+/** Where a label sits in its tile, following [LocalTileText]. */
+@Composable
+fun tileLabelAlignment(): Alignment {
+    val text = LocalTileText.current
+    return when (text.vertical) {
+        VerticalAnchor.TOP -> if (text.alignStart) Alignment.TopStart else Alignment.TopCenter
+        VerticalAnchor.CENTER -> if (text.alignStart) Alignment.CenterStart else Alignment.Center
+        VerticalAnchor.BOTTOM -> if (text.alignStart) Alignment.BottomStart else Alignment.BottomCenter
+    }
+}
+
+/** [label] as drawn on a tile (letter case applied). */
+@Composable
+fun tileLabel(label: String): String = LocalTileText.current.display(label)
+
+/** Corner shape of the tiles, following [LocalTileShape]. */
+@Composable
+fun tileCorners(): Shape = RoundedCornerShape(LocalTileShape.current.cornerDp.dp)
+
 /** Stored tile colors with special meanings and the preset swatches. */
 object QuedalleColors {
     /** Sentinel: "same color as app cards" — resolved per theme at render time. */
@@ -120,7 +186,8 @@ val AutoLightText = Color(0xFFEDEDED)
 fun resolveTileTextColor(style: TileStyle, resolvedBackground: Color): Color {
     style.textColor?.let { return Color(it) }
     val bgArgb = resolvedBackground.toArgb()
-    if (style.texture == null && alphaOf(bgArgb) < 128) {
+    // Nothing is painted behind the text: it sits on the screen background.
+    if (style.texture == Textures.OUTLINE || (style.texture == null && alphaOf(bgArgb) < 128)) {
         return LocalQuedallePalette.current.textPrimary
     }
     val representative = Textures.representativeColor(style.texture, bgArgb)
@@ -128,7 +195,7 @@ fun resolveTileTextColor(style: TileStyle, resolvedBackground: Color): Color {
 }
 
 @Composable
-fun LauncherTheme(themeMode: ThemeMode, content: @Composable () -> Unit) {
+fun LauncherTheme(themeMode: ThemeMode, screen: ScreenLook, content: @Composable () -> Unit) {
     val dark = when (themeMode) {
         ThemeMode.DARK   -> true
         ThemeMode.LIGHT  -> false
@@ -152,7 +219,9 @@ fun LauncherTheme(themeMode: ThemeMode, content: @Composable () -> Unit) {
         }
     }
 
-    CompositionLocalProvider(LocalQuedallePalette provides if (dark) DarkPalette else LightPalette) {
+    val base = if (dark) DarkPalette else LightPalette
+    val palette = screen.background(dark)?.let { base.copy(background = Color(it)) } ?: base
+    CompositionLocalProvider(LocalQuedallePalette provides palette, LocalIsDark provides dark) {
         MaterialTheme(colorScheme = colorScheme, content = content)
     }
 }

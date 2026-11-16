@@ -13,6 +13,8 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -20,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.mlg.quedalle.R
 import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
+import dev.mlg.quedalle.ui.theme.LocalTileShape
+import dev.mlg.quedalle.ui.theme.tileLabelStyle
 
 @Composable
 fun SearchField(
@@ -27,13 +31,14 @@ fun SearchField(
     onQueryChange: (String) -> Unit,
     onFocusChange: (Boolean) -> Unit,
     onDone: () -> Unit,
+    focusRequester: FocusRequester,
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalQuedallePalette.current
     OutlinedTextField(
         value = query,
         onValueChange = onQueryChange,
-        modifier = modifier.onFocusChanged { onFocusChange(it.isFocused) },
+        modifier = modifier.focusRequester(focusRequester).onFocusChanged { onFocusChange(it.isFocused) },
         placeholder = { Text(stringResource(R.string.search_placeholder), color = palette.textMuted, fontSize = 14.sp) },
         leadingIcon = {
             Icon(Icons.Default.Search, contentDescription = null,
@@ -51,7 +56,7 @@ fun SearchField(
             focusedContainerColor   = palette.fieldFocused,
             unfocusedContainerColor = palette.surfaceDim,
         ),
-        shape = RoundedCornerShape(14.dp),
-        textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
+        shape = RoundedCornerShape((LocalTileShape.current.cornerDp * 1.4f).dp),
+        textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, fontFamily = tileLabelStyle(palette.textStrong).fontFamily),
     )
 }

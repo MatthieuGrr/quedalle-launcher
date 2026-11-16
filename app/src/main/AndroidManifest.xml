@@ -3,6 +3,8 @@
 
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES"/>
     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR"/>
+    <!-- Lists the Android 15 private space; only honored for the default launcher. -->
+    <uses-permission android:name="android.permission.ACCESS_HIDDEN_PROFILES"/>
 
     <queries>
         <intent>

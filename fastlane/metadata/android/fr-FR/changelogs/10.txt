@@ -1,0 +1,3 @@
+• La taille du texte des tuiles est réglable (Réglages → Texte des tuiles)
+• Le texte des tuiles peut être centré ou aligné à gauche, normal ou gras
+• Un message s'affiche quand une application ne peut pas être ouverte, au lieu de ne rien faire

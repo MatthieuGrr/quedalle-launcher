@@ -19,7 +19,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             val vm: LauncherViewModel = viewModel()
             val themeMode by vm.themeMode.collectAsStateWithLifecycle()
-            LauncherTheme(themeMode) {
+            val screenLook by vm.screenLook.collectAsStateWithLifecycle()
+            LauncherTheme(themeMode, screenLook) {
                 LauncherScreen(vm = vm)
             }
         }
