@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.mlg.quedalle.model.TileItem
+import dev.mlg.quedalle.model.TileStyle
 import dev.mlg.quedalle.model.fullRowFlags
 import dev.mlg.quedalle.model.gridPositions
 import dev.mlg.quedalle.ui.theme.QuedalleColors
@@ -195,7 +196,9 @@ fun TileGrid(
 @Composable
 private fun TileCard(tile: TileItem, isDragging: Boolean, height: Dp, modifier: Modifier = Modifier) {
     when (tile) {
-        is TileItem.App     -> AppCard(tile, isDragging, height, modifier)
+        is TileItem.App      -> LabelCard(tile.info.displayLabel, tile.style, isDragging, height, modifier)
+        is TileItem.Shortcut -> LabelCard(tile.label, tile.style, isDragging, height, modifier)
+        is TileItem.Info     -> LabelCard(infoText(tile.kind), tile.style, isDragging, height, modifier)
         is TileItem.Spacer  -> SpacerCard(tile, isDragging, height, modifier)
         is TileItem.Divider -> DividerCard(tile, isDragging, modifier)
     }
@@ -223,10 +226,11 @@ private fun DividerCard(tile: TileItem.Divider, isDragging: Boolean, modifier: M
     }
 }
 
+/** A text tile: an app, a shortcut or a piece of information. */
 @Composable
-private fun AppCard(tile: TileItem.App, isDragging: Boolean, height: Dp, modifier: Modifier) {
-    val baseBg = resolveTileColor(tile.style.background ?: QuedalleColors.TileAppColor)
-    val brush = Textures.brush(tile.style.texture, baseBg)
+private fun LabelCard(label: String, style: TileStyle, isDragging: Boolean, height: Dp, modifier: Modifier) {
+    val baseBg = resolveTileColor(style.background ?: QuedalleColors.TileAppColor)
+    val brush = Textures.brush(style.texture, baseBg)
     val bgColor by animateColorAsState(
         targetValue = if (isDragging) MaterialTheme.colorScheme.secondaryContainer
                       else baseBg,
@@ -235,7 +239,7 @@ private fun AppCard(tile: TileItem.App, isDragging: Boolean, height: Dp, modifie
     )
     val textColor by animateColorAsState(
         targetValue = if (isDragging) MaterialTheme.colorScheme.onSecondaryContainer
-                      else resolveTileTextColor(tile.style, baseBg),
+                      else resolveTileTextColor(style, baseBg),
         animationSpec = tween(if (isDragging) 80 else 350),
         label = "text",
     )
@@ -249,7 +253,7 @@ private fun AppCard(tile: TileItem.App, isDragging: Boolean, height: Dp, modifie
         contentAlignment = tileLabelAlignment(),
     ) {
         Text(
-            text = tile.info.displayLabel,
+            text = label,
             style = tileLabelStyle(textColor),
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,

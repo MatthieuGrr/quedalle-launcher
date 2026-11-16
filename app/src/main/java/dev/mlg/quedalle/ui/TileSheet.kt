@@ -28,6 +28,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -48,6 +49,9 @@ import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.mlg.quedalle.R
+import dev.mlg.quedalle.data.AppShortcut
+import dev.mlg.quedalle.model.InfoKind
+import dev.mlg.quedalle.model.ShortcutTarget
 import dev.mlg.quedalle.model.TEXTURE_NONE
 import dev.mlg.quedalle.model.TEXT_COLOR_AUTO
 import dev.mlg.quedalle.model.TileItem
@@ -59,18 +63,21 @@ import dev.mlg.quedalle.ui.theme.resolveTileColor
 import dev.mlg.quedalle.ui.theme.tileLabelAlignment
 import dev.mlg.quedalle.ui.theme.tileLabelStyle
 import dev.mlg.quedalle.ui.theme.resolveTileTextColor
+import dev.mlg.quedalle.viewmodel.LauncherUiState
 import dev.mlg.quedalle.viewmodel.LauncherViewModel
 
 /**
  * The single long-press sheet: a live preview of the tile with a pencil
  * that unfolds name & style editing, then the tile's actions, then the
- * launcher-wide entries (grid editing, settings). Everything applies
- * immediately.
+ * launcher-wide entries (grid editing, layouts, settings). Everything
+ * applies immediately. With no [tile] (long-press on empty space) only
+ * the launcher-wide entries are shown.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TileSheet(
-    tile: TileItem,
+    tile: TileItem?,
+    state: LauncherUiState,
     vm: LauncherViewModel,
     onEnterEdit: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -97,16 +104,116 @@ fun TileSheet(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             when (tile) {
-                is TileItem.App     -> AppSheetContent(tile, vm, onDismiss)
-                is TileItem.Spacer  -> SpacerSheetContent(tile, vm, onDismiss)
-                is TileItem.Divider -> DividerSheetContent(tile, vm, onDismiss)
+                is TileItem.App      -> AppSheetContent(tile, vm, onDismiss)
+                is TileItem.Shortcut -> ShortcutSheetContent(tile, vm, onDismiss)
+                is TileItem.Info     -> InfoSheetContent(tile, vm, onDismiss)
+                is TileItem.Spacer   -> SpacerSheetContent(tile, vm, onDismiss)
+                is TileItem.Divider  -> DividerSheetContent(tile, vm, onDismiss)
+                null -> Unit
             }
 
             // ── Launcher-wide entries ─────────────────────────────────────────
-            HorizontalDivider(color = palette.borderIdle)
+            if (tile != null) HorizontalDivider(color = palette.borderIdle)
             SheetOption(stringResource(R.string.action_reorder)) { onEnterEdit() }
+            state.profiles.profiles
+                .filter { it.id != state.profiles.activeId }
+                .forEach { profile ->
+                    SheetOption(stringResource(R.string.action_switch_profile, profileLabel(profile.name))) {
+                        vm.switchProfile(profile.id); onDismiss()
+                    }
+                }
             SheetOption(stringResource(R.string.action_settings)) { onOpenSettings() }
         }
+    }
+}
+
+/** Display name of a layout; the first one has none until it is renamed. */
+@Composable
+internal fun profileLabel(name: String): String =
+    name.ifBlank { stringResource(R.string.profile_default_name) }
+
+/**
+ * Preview of a text tile with its pencil. Unfolded, it edits the name
+ * (when [onRename] is given) and the style overrides of the tile.
+ *
+ * @param resetName name shown again after "reset", when resetting also
+ * restores the original name.
+ */
+@Composable
+private fun StyledTileEditor(
+    tile: TileItem.Styled,
+    vm: LauncherViewModel,
+    text: String,
+    placeholder: String,
+    caption: String?,
+    onRename: ((String) -> Unit)?,
+    resetName: String? = null,
+) {
+    val palette = LocalQuedallePalette.current
+    var editing by remember(tile.id) { mutableStateOf(false) }
+    var name by remember(tile.id) { mutableStateOf(text) }
+
+    TilePreviewCard(
+        background = tile.style.background ?: QuedalleColors.TileAppColor,
+        textColor = tile.style.textColor,
+        texture = tile.style.texture,
+        editing = editing,
+        onToggleEditing = { editing = !editing },
+    ) { previewText ->
+        if (editing && onRename != null) {
+            BasicTextField(
+                value = name,
+                onValueChange = { name = it; onRename(it) },
+                textStyle = tileLabelStyle(previewText),
+                cursorBrush = SolidColor(previewText),
+                maxLines = 2,
+                decorationBox = { innerTextField ->
+                    Box(contentAlignment = tileLabelAlignment()) {
+                        if (name.isEmpty()) {
+                            Text(placeholder, style = tileLabelStyle(previewText.copy(alpha = 0.4f)))
+                        }
+                        innerTextField()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+            )
+        } else {
+            Text(
+                // Tiles that cannot be renamed show live text (clock, battery…).
+                text = if (onRename == null) text else name.ifBlank { placeholder },
+                style = tileLabelStyle(previewText),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+            )
+        }
+    }
+    if (caption != null) {
+        Text(
+            caption,
+            color = palette.textMuted, fontSize = 10.sp, textAlign = TextAlign.Center,
+            maxLines = 1, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+
+    if (editing) {
+        AppearanceControls(
+            background = tile.style.background ?: QuedalleColors.TileAppColor,
+            textColor = tile.style.textColor,
+            texture = tile.style.texture,
+            showTextSection = true,
+            onBackground = { vm.setTileBackground(tile.id, it) },
+            onTextColor = { vm.setTileTextColor(tile.id, it ?: TEXT_COLOR_AUTO) },
+            onTexture = { vm.setTileTexture(tile.id, it ?: TEXTURE_NONE) },
+        )
+        TextButton(
+            onClick = {
+                vm.resetTileStyle(tile.id)
+                if (resetName != null) { name = resetName; onRename?.invoke(resetName) }
+            },
+            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
+        ) { Text(stringResource(R.string.action_reset), fontSize = 12.sp) }
     }
 }
 
@@ -120,67 +227,16 @@ private fun AppSheetContent(
     val app = tile.info
 
     if (app.isPinned) {
-        var editing by remember(tile.id) { mutableStateOf(false) }
-        var name by remember(tile.id) { mutableStateOf(app.customLabel ?: app.label) }
-
-        TilePreviewCard(
-            background = tile.style.background ?: QuedalleColors.TileAppColor,
-            textColor = tile.style.textColor,
-            texture = tile.style.texture,
-            editing = editing,
-            onToggleEditing = { editing = !editing },
-        ) { previewText ->
-            if (editing) {
-                BasicTextField(
-                    value = name,
-                    onValueChange = {
-                        name = it
-                        vm.renameTile(tile.id, it.takeIf { text -> text.isNotBlank() && text != app.label })
-                    },
-                    textStyle = tileLabelStyle(previewText),
-                    cursorBrush = SolidColor(previewText),
-                    maxLines = 2,
-                    decorationBox = { innerTextField ->
-                        Box(contentAlignment = tileLabelAlignment()) {
-                            if (name.isEmpty()) {
-                                Text(app.label, style = tileLabelStyle(previewText.copy(alpha = 0.4f)))
-                            }
-                            innerTextField()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
-                )
-            } else {
-                Text(
-                    text = if (name.isBlank()) app.label else name,
-                    style = tileLabelStyle(previewText),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
-                )
-            }
-        }
-        Text(
-            app.packageName,
-            color = palette.textMuted, fontSize = 10.sp, textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
+        StyledTileEditor(
+            tile = tile,
+            vm = vm,
+            text = app.customLabel ?: app.label,
+            placeholder = app.label,
+            caption = app.packageName,
+            // A blank or unchanged name means "follow the app's own label".
+            onRename = { vm.renameTile(tile.id, it.takeIf { text -> text.isNotBlank() && text != app.label }) },
+            resetName = app.label,
         )
-
-        if (editing) {
-            AppearanceControls(
-                background = tile.style.background ?: QuedalleColors.TileAppColor,
-                textColor = tile.style.textColor,
-                texture = tile.style.texture,
-                showTextSection = true,
-                onBackground = { vm.setTileBackground(tile.id, it) },
-                onTextColor = { vm.setTileTextColor(tile.id, it ?: TEXT_COLOR_AUTO) },
-                onTexture = { vm.setTileTexture(tile.id, it ?: TEXTURE_NONE) },
-            )
-            TextButton(
-                onClick = { vm.resetTileStyle(tile.id); name = app.label },
-                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
-            ) { Text(stringResource(R.string.action_reset), fontSize = 12.sp) }
-        }
     } else {
         Text(app.displayLabel, color = palette.textStrong, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
         Text(app.packageName, color = palette.textMuted, fontSize = 10.sp)
@@ -199,6 +255,76 @@ private fun AppSheetContent(
         SheetOption(stringResource(R.string.action_uninstall), color = palette.danger) {
             vm.requestUninstall(app); onDismiss()
         }
+    }
+
+    // ── Shortcuts the app offers, each pinnable as its own tile ──────────────
+    val shortcuts by produceState(emptyList<AppShortcut>(), app.key) { value = vm.shortcutsOf(app) }
+    if (shortcuts.isNotEmpty()) {
+        HorizontalDivider(color = palette.borderIdle)
+        SectionLabel(stringResource(R.string.sheet_shortcuts))
+        shortcuts.take(MAX_SHORTCUTS_LISTED).forEach { shortcut ->
+            SheetOption(stringResource(R.string.action_pin_shortcut, shortcut.label)) {
+                vm.addShortcut(app, shortcut); onDismiss()
+            }
+        }
+    }
+}
+
+private const val MAX_SHORTCUTS_LISTED = 6
+
+@Composable
+private fun ShortcutSheetContent(
+    tile: TileItem.Shortcut,
+    vm: LauncherViewModel,
+    onDismiss: () -> Unit,
+) {
+    val palette = LocalQuedallePalette.current
+    StyledTileEditor(
+        tile = tile,
+        vm = vm,
+        text = tile.label,
+        placeholder = tile.label,
+        caption = when (val target = tile.target) {
+            is ShortcutTarget.AppShortcut -> target.packageName
+            is ShortcutTarget.Link -> target.uri
+        },
+        // A shortcut has no name to fall back on: an empty field changes nothing.
+        onRename = { if (it.isNotBlank()) vm.renameTile(tile.id, it) },
+    )
+
+    HorizontalDivider(color = palette.borderIdle)
+    SheetOption(stringResource(R.string.action_remove), color = palette.danger) {
+        vm.removeTile(tile.id); onDismiss()
+    }
+}
+
+@Composable
+private fun InfoSheetContent(
+    tile: TileItem.Info,
+    vm: LauncherViewModel,
+    onDismiss: () -> Unit,
+) {
+    val palette = LocalQuedallePalette.current
+    val text = infoText(tile.kind)
+    StyledTileEditor(
+        tile = tile,
+        vm = vm,
+        text = text,
+        placeholder = text,
+        caption = stringResource(
+            when (tile.kind) {
+                InfoKind.CLOCK -> R.string.tile_clock
+                InfoKind.DATE -> R.string.tile_date
+                InfoKind.BATTERY -> R.string.tile_battery
+                InfoKind.ALARM -> R.string.tile_alarm
+            }
+        ),
+        onRename = null,
+    )
+
+    HorizontalDivider(color = palette.borderIdle)
+    SheetOption(stringResource(R.string.action_remove), color = palette.danger) {
+        vm.removeTile(tile.id); onDismiss()
     }
 }
 
@@ -295,7 +421,7 @@ private fun TilePreviewCard(
 }
 
 @Composable
-private fun SheetOption(label: String, color: Color = Color.Unspecified, onClick: () -> Unit) {
+internal fun SheetOption(label: String, color: Color = Color.Unspecified, onClick: () -> Unit) {
     val palette = LocalQuedallePalette.current
     TextButton(
         onClick = onClick,

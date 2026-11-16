@@ -36,18 +36,52 @@ fun mergeTileStyle(override: TileStyle, global: TileStyle): TileStyle = TileStyl
     },
 )
 
+/** What a shortcut tile opens. */
+sealed interface ShortcutTarget {
+    /** A shortcut published by an app (a conversation, a route…). */
+    data class AppShortcut(
+        val packageName: String,
+        val userSerial: Long?,
+        val shortcutId: String,
+    ) : ShortcutTarget
+
+    /** Anything openable by URI: a web page, a contact, "tel:"… */
+    data class Link(val uri: String) : ShortcutTarget
+}
+
 sealed class TileItem {
     abstract val id: String
 
+    /** Tiles drawn as a text card that follows the global tile style. */
+    sealed class Styled : TileItem() {
+        /** Effective style (override merged with the global style). */
+        abstract val style: TileStyle
+        /** Raw per-tile override, as persisted. */
+        abstract val override: TileStyle
+    }
+
     data class App(
         val info: AppInfo,
-        /** Effective style (override merged with the global style). */
-        val style: TileStyle = TileStyle(),
-        /** Raw per-tile override, persisted as-is on reorder. */
-        val override: TileStyle = TileStyle(),
-    ) : TileItem() {
+        override val style: TileStyle = TileStyle(),
+        override val override: TileStyle = TileStyle(),
+    ) : Styled() {
         override val id: String get() = info.key
     }
+
+    data class Shortcut(
+        override val id: String,
+        val label: String,
+        val target: ShortcutTarget,
+        override val style: TileStyle = TileStyle(),
+        override val override: TileStyle = TileStyle(),
+    ) : Styled()
+
+    data class Info(
+        override val id: String,
+        val kind: InfoKind,
+        override val style: TileStyle = TileStyle(),
+        override val override: TileStyle = TileStyle(),
+    ) : Styled()
 
     data class Spacer(
         override val id: String,

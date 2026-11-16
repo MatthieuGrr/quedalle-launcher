@@ -3,6 +3,8 @@
 
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES"/>
     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR"/>
+    <!-- Lists the Android 15 private space; only honored for the default launcher. -->
+    <uses-permission android:name="android.permission.ACCESS_HIDDEN_PROFILES"/>
 
     <queries>
         <intent>
@@ -32,6 +34,20 @@
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
+
+        <!-- Opt-in, only used by the "lock screen" gesture. -->
+        <service
+            android:name=".LockService"
+            android:exported="true"
+            android:label="@string/lock_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/lock_service"/>
+        </service>
 
     </application>
 

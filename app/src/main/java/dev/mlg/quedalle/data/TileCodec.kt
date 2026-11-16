@@ -1,9 +1,13 @@
 package dev.mlg.quedalle.data
 
+import dev.mlg.quedalle.model.InfoKind
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
@@ -14,6 +18,9 @@ import kotlinx.serialization.json.jsonPrimitive
 const val TYPE_APP = "app"
 const val TYPE_SPACER = "spacer"
 const val TYPE_DIVIDER = "divider"
+const val TYPE_SHORTCUT = "shortcut"
+const val TYPE_LINK = "link"
+const val TYPE_INFO = "info"
 
 const val DEFAULT_TILE_COLOR = 0xFF141414.toInt()
 
@@ -21,11 +28,14 @@ const val DEFAULT_TILE_COLOR = 0xFF141414.toInt()
  * One persisted tile. Short serial names keep the stored JSON compatible
  * with the hand-rolled format of versions <= 1.4 ("t"/"id"/"pkg"/"l"/"c").
  *
- * For app tiles the three style fields are *overrides* of the global tile
- * style: null = inherit. Explicit sentinels ([TEXT_COLOR_AUTO],
- * [TEXTURE_NONE] from the model package) mean "auto"/"flat" even when the
- * global style says otherwise. Spacers and dividers always carry their own
- * color (no inheritance).
+ * For text tiles (apps, shortcuts, links, info) the three style fields are
+ * *overrides* of the global tile style: null = inherit. Explicit sentinels
+ * ([TEXT_COLOR_AUTO], [TEXTURE_NONE] from the model package) mean
+ * "auto"/"flat" even when the global style says otherwise. Spacers and
+ * dividers always carry their own color (no inheritance).
+ *
+ * Per type: an app shortcut uses [pkg], [userSerial] and [shortcutId]; a
+ * link uses [uri]; an info tile uses [kind].
  */
 @Serializable
 data class TileDef(
@@ -37,6 +47,9 @@ data class TileDef(
     @SerialName("c") val color: Int? = null,
     @SerialName("fc") val textColor: Int? = null,
     @SerialName("tx") val texture: String? = null,
+    @SerialName("sid") val shortcutId: String? = null,
+    @SerialName("uri") val uri: String? = null,
+    @SerialName("k") val kind: String? = null,
 )
 
 fun List<TileDef>.fullRowFlags(): List<Boolean> = map { it.type == TYPE_DIVIDER }
@@ -54,10 +67,28 @@ fun List<TileDef>.reordered(orderedIds: List<String>): List<TileDef> {
     return map { if (it.id in movedIds) moved.next() else it }
 }
 
-/** Full launcher configuration, used for export/import. */
+/** One named grid layout: its dimensions and its tiles. */
+@Serializable
+data class GridProfile(
+    val id: String,
+    val name: String = "",
+    val columns: Int = 3,
+    val rows: Int = 4,
+    val tiles: List<TileDef> = emptyList(),
+)
+
+/**
+ * Full launcher configuration, used for export/import.
+ *
+ * [columns], [rows] and [tiles] always describe the active layout, so a
+ * version that knows nothing about [profiles] still restores what was on
+ * screen. [swipeDownNotifications] plays the same role for [gestures].
+ */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class LayoutBackup(
-    val version: Int = 1,
+    /** Always written, so a file says which format it is. */
+    @EncodeDefault val version: Int = 2,
     val columns: Int,
     val rows: Int,
     val swipeDownNotifications: Boolean = true,
@@ -70,6 +101,9 @@ data class LayoutBackup(
     val tileTextBold: Boolean? = null,
     val hidden: List<String> = emptyList(),
     val tiles: List<TileDef> = emptyList(),
+    val gestures: Map<String, String>? = null,
+    val profiles: List<GridProfile>? = null,
+    val activeProfile: String? = null,
 )
 
 object TileCodec {
@@ -83,15 +117,12 @@ object TileCodec {
      * skipped instead of discarding the whole layout; returns null only
      * when [raw] is null or not a JSON array at all.
      */
-    fun decode(raw: String?): List<TileDef>? {
-        raw ?: return null
-        val arr = try {
-            json.parseToJsonElement(raw) as? JsonArray
-        } catch (_: Exception) {
-            null
-        } ?: return null
-        return decodeElements(arr)
-    }
+    fun decode(raw: String?): List<TileDef>? = parseArray(raw)?.let(::decodeElements)
+
+    fun encodeProfiles(profiles: List<GridProfile>): String = json.encodeToString(profiles)
+
+    /** Decodes stored layouts as leniently as [decode]; null when absent or unreadable. */
+    fun decodeProfiles(raw: String?): List<GridProfile>? = parseArray(raw)?.let(::decodeProfileElements)
 
     fun encodeBackup(backup: LayoutBackup): String = json.encodeToString(backup)
 
@@ -114,9 +145,23 @@ object TileCodec {
                 try { it.jsonPrimitive.content } catch (_: Exception) { null }
             } ?: emptyList(),
             tiles = obj["tiles"]?.jsonArray?.let(::decodeElements) ?: emptyList(),
+            gestures = (obj["gestures"] as? JsonObject)?.mapNotNull { (key, value) ->
+                try { key to value.jsonPrimitive.content } catch (_: Exception) { null }
+            }?.toMap(),
+            profiles = (obj["profiles"] as? JsonArray)?.let(::decodeProfileElements),
+            activeProfile = obj["activeProfile"]?.jsonPrimitive?.contentOrNull,
         )
     } catch (_: Exception) {
         null
+    }
+
+    private fun parseArray(raw: String?): JsonArray? {
+        raw ?: return null
+        return try {
+            json.parseToJsonElement(raw) as? JsonArray
+        } catch (_: Exception) {
+            null
+        }
     }
 
     // Ids are the grid's item keys: a duplicate would crash the home screen
@@ -129,8 +174,26 @@ object TileCodec {
         }
     }.distinctBy { it.id }
 
+    private fun decodeProfileElements(arr: JsonArray): List<GridProfile> = arr.mapNotNull { element ->
+        try {
+            val obj = element.jsonObject
+            GridProfile(
+                id = obj["id"]!!.jsonPrimitive.content.also { require(it.isNotBlank()) },
+                name = obj["name"]?.jsonPrimitive?.contentOrNull ?: "",
+                columns = obj["columns"]?.jsonPrimitive?.intOrNull ?: 3,
+                rows = obj["rows"]?.jsonPrimitive?.intOrNull ?: 4,
+                tiles = obj["tiles"]?.jsonArray?.let(::decodeElements) ?: emptyList(),
+            )
+        } catch (_: Exception) {
+            null
+        }
+    }.distinctBy { it.id }
+
     private fun isValid(def: TileDef): Boolean = def.id.isNotBlank() && when (def.type) {
         TYPE_APP -> !def.pkg.isNullOrBlank()
+        TYPE_SHORTCUT -> !def.pkg.isNullOrBlank() && !def.shortcutId.isNullOrBlank()
+        TYPE_LINK -> !def.uri.isNullOrBlank()
+        TYPE_INFO -> InfoKind.fromKey(def.kind) != null
         TYPE_SPACER, TYPE_DIVIDER -> true
         else -> false
     }

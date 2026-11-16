@@ -1,6 +1,7 @@
 package dev.mlg.quedalle
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dev.mlg.quedalle.data.AppPreferences
@@ -8,6 +9,8 @@ import dev.mlg.quedalle.data.TYPE_APP
 import dev.mlg.quedalle.data.TYPE_DIVIDER
 import dev.mlg.quedalle.data.TYPE_SPACER
 import dev.mlg.quedalle.data.TileDef
+import dev.mlg.quedalle.model.Gesture
+import dev.mlg.quedalle.model.GestureAction
 import dev.mlg.quedalle.model.TileText
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -85,9 +88,9 @@ class AppPreferencesTest {
     }
 
     @Test
-    fun `removeTiles drops only the given ids`() = runBlocking {
+    fun `removeTilesEverywhere drops only the matching tiles`() = runBlocking {
         pin("a", "b", "c")
-        prefs.removeTiles(setOf("a", "c", "unknown"))
+        prefs.removeTilesEverywhere { it.id == "a" || it.id == "c" }
         assertEquals(listOf("b"), ids())
     }
 
@@ -110,7 +113,7 @@ class AppPreferencesTest {
         prefs.setGlobalBackground(0x445566)
         val backup = prefs.exportBackup()
 
-        prefs.removeTiles(setOf("a", "b"))
+        prefs.removeTilesEverywhere { true }
         prefs.setGridColumns(2)
         prefs.setHidden("secret", false)
 
@@ -160,5 +163,176 @@ class AppPreferencesTest {
         prefs.setTileText(TileText(sizeSp = 16, bold = true))
         assertTrue(prefs.importBackup("""{"columns":3,"rows":4,"tiles":[]}"""))
         assertEquals(TileText(), prefs.tileText.first())
+    }
+
+    // ── Layouts ──────────────────────────────────────────────────────────────
+
+    private suspend fun profileIds() = prefs.profiles.first().profiles.map { it.id }
+    private suspend fun activeProfile() = prefs.profiles.first().activeId
+
+    @Test
+    fun `a fresh install has one unnamed layout`() = runBlocking {
+        val state = prefs.profiles.first()
+        assertEquals(listOf(AppPreferences.MAIN_PROFILE_ID), state.profiles.map { it.id })
+        assertEquals(AppPreferences.MAIN_PROFILE_ID, state.activeId)
+    }
+
+    @Test
+    fun `a new layout starts empty and each layout keeps its own tiles and grid`() = runBlocking {
+        pin("a", "b")
+        assertTrue(prefs.createProfile(" Weekend "))
+        assertEquals(emptyList<String>(), ids())
+        assertEquals("Weekend", prefs.profiles.first().profiles.last().name)
+
+        prefs.setGridColumns(5)
+        pin("c")
+        val weekend = activeProfile()
+
+        prefs.switchProfile(AppPreferences.MAIN_PROFILE_ID)
+        assertEquals(listOf("a", "b"), ids())
+        assertEquals(AppPreferences.DEFAULT_COLUMNS, prefs.gridColumns.first())
+
+        prefs.switchProfile(weekend)
+        assertEquals(listOf("c"), ids())
+        assertEquals(5, prefs.gridColumns.first())
+    }
+
+    @Test
+    fun `nextProfile cycles and does nothing with a single layout`() = runBlocking {
+        prefs.nextProfile()
+        assertEquals(AppPreferences.MAIN_PROFILE_ID, activeProfile())
+
+        prefs.createProfile("B")
+        val b = activeProfile()
+        prefs.nextProfile()
+        assertEquals(AppPreferences.MAIN_PROFILE_ID, activeProfile())
+        prefs.nextProfile()
+        assertEquals(b, activeProfile())
+    }
+
+    @Test
+    fun `renaming a layout keeps the active one and its tiles`() = runBlocking {
+        pin("a")
+        prefs.renameProfile(AppPreferences.MAIN_PROFILE_ID, "Work")
+        assertEquals("Work", prefs.profiles.first().profiles.single().name)
+        assertEquals(AppPreferences.MAIN_PROFILE_ID, activeProfile())
+        assertEquals(listOf("a"), ids())
+    }
+
+    @Test
+    fun `deleting the active layout shows another one, the last one cannot go`() = runBlocking {
+        pin("a")
+        prefs.createProfile("B")
+        pin("b")
+        assertTrue(prefs.deleteProfile(activeProfile()))
+        assertEquals(listOf(AppPreferences.MAIN_PROFILE_ID), profileIds())
+        assertEquals(listOf("a"), ids())
+        assertFalse(prefs.deleteProfile(AppPreferences.MAIN_PROFILE_ID))
+        assertFalse(prefs.deleteProfile("unknown"))
+    }
+
+    @Test
+    fun `deleting a background layout leaves the screen alone`() = runBlocking {
+        pin("a")
+        prefs.createProfile("B")
+        pin("b")
+        assertTrue(prefs.deleteProfile(AppPreferences.MAIN_PROFILE_ID))
+        assertEquals(listOf("b"), ids())
+        assertEquals(1, profileIds().size)
+    }
+
+    @Test
+    fun `layouts are capped`() = runBlocking {
+        repeat(AppPreferences.MAX_PROFILES - 1) { assertTrue(prefs.createProfile("p$it")) }
+        assertFalse(prefs.createProfile("one too many"))
+        assertEquals(AppPreferences.MAX_PROFILES, profileIds().size)
+    }
+
+    @Test
+    fun `uninstalled apps are removed from background layouts too`() = runBlocking {
+        pin("a", "gone")
+        prefs.createProfile("B")
+        pin("gone", "b")
+        prefs.removeTilesEverywhere { it.id == "gone" }
+        assertEquals(listOf("b"), ids())
+        assertEquals(listOf("a", "b"), prefs.allTileDefinitions().map { it.id })
+    }
+
+    @Test
+    fun `backup carries every layout and which one is shown`() = runBlocking {
+        pin("a")
+        prefs.createProfile("B")
+        pin("b")
+        val shown = activeProfile()
+        val backup = prefs.exportBackup()
+
+        prefs.deleteProfile(shown)
+        prefs.removeTilesEverywhere { true }
+
+        assertTrue(prefs.importBackup(backup))
+        assertEquals(shown, activeProfile())
+        assertEquals(listOf("b"), ids())
+        prefs.switchProfile(AppPreferences.MAIN_PROFILE_ID)
+        assertEquals(listOf("a"), ids())
+    }
+
+    @Test
+    fun `importing a single-layout backup drops the extra layouts`() = runBlocking {
+        prefs.createProfile("B")
+        assertTrue(prefs.importBackup("""{"columns":3,"rows":4,"tiles":[{"t":"app","id":"p","pkg":"p"}]}"""))
+        assertEquals(listOf(AppPreferences.MAIN_PROFILE_ID), profileIds())
+        assertEquals(listOf("p"), ids())
+    }
+
+    // ── Gestures ─────────────────────────────────────────────────────────────
+
+    @Test
+    fun `swipe down opens notifications by default, other gestures do nothing`() = runBlocking {
+        assertEquals(
+            mapOf(
+                Gesture.SWIPE_DOWN to GestureAction.Notifications,
+                Gesture.SWIPE_UP to GestureAction.None,
+                Gesture.DOUBLE_TAP to GestureAction.None,
+            ),
+            prefs.gestures.first(),
+        )
+    }
+
+    @Test
+    fun `the old swipe-down switch still decides until a gesture is chosen`() = runBlocking {
+        store.edit { it[booleanPreferencesKey("swipe_down_notifications")] = false }
+        assertEquals(GestureAction.None, prefs.gestures.first()[Gesture.SWIPE_DOWN])
+        prefs.setGesture(Gesture.SWIPE_DOWN, GestureAction.QuickSettings)
+        assertEquals(GestureAction.QuickSettings, prefs.gestures.first()[Gesture.SWIPE_DOWN])
+    }
+
+    @Test
+    fun `gestures survive a backup, old backups fall back to the switch`() = runBlocking {
+        prefs.setGesture(Gesture.SWIPE_UP, GestureAction.LaunchApp("com.a#10"))
+        prefs.setGesture(Gesture.DOUBLE_TAP, GestureAction.LockScreen)
+        val backup = prefs.exportBackup()
+        prefs.setGesture(Gesture.SWIPE_UP, GestureAction.None)
+
+        assertTrue(prefs.importBackup(backup))
+        assertEquals(GestureAction.LaunchApp("com.a#10"), prefs.gestures.first()[Gesture.SWIPE_UP])
+        assertEquals(GestureAction.LockScreen, prefs.gestures.first()[Gesture.DOUBLE_TAP])
+
+        assertTrue(prefs.importBackup("""{"columns":3,"rows":4,"swipeDownNotifications":false}"""))
+        assertEquals(Gesture.entries.associateWith { GestureAction.None }, prefs.gestures.first())
+    }
+
+    @Test
+    fun `applying the global style clears overrides of every text tile in every layout`() = runBlocking {
+        pin("a")
+        prefs.updateTile("a") { it.copy(color = 1, textColor = 2, texture = "iris") }
+        prefs.addTile(TileDef(TYPE_SPACER, "sp_1", color = 7))
+        prefs.createProfile("B")
+        prefs.addTile(TileDef("info", "in_1", kind = "clock", color = 3))
+
+        prefs.applyGlobalStyleToAllTiles()
+        val all = prefs.allTileDefinitions().associateBy { it.id }
+        assertEquals(TileDef(TYPE_APP, "a", pkg = "a"), all["a"])
+        assertEquals(null, all["in_1"]!!.color)
+        assertEquals(7, all["sp_1"]!!.color)
     }
 }

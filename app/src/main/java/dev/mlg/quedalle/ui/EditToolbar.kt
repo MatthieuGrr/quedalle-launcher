@@ -2,6 +2,7 @@ package dev.mlg.quedalle.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -11,12 +12,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -26,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.mlg.quedalle.R
 import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
+import dev.mlg.quedalle.viewmodel.NewTile
 
 /**
  * Toolbar shown in grid-edit mode: add tiles, resize the grid, done.
@@ -35,7 +43,9 @@ import dev.mlg.quedalle.ui.theme.LocalQuedallePalette
 fun EditToolbar(
     columns: Int, rows: Int,
     onColumnsChange: (Int) -> Unit, onRowsChange: (Int) -> Unit,
-    onAddSpacer: () -> Unit, onAddDivider: () -> Unit,
+    onAdd: (NewTile) -> Unit,
+    onAddLink: () -> Unit,
+    onAddContact: () -> Unit,
     onDone: () -> Unit,
 ) {
     val palette = LocalQuedallePalette.current
@@ -46,22 +56,14 @@ fun EditToolbar(
     ) {
         HorizontalDivider(color = palette.borderIdle)
 
-        // Row 1: add tiles + done
+        // Row 1: add a tile + done
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TextButton(
-                onClick = onAddSpacer,
-                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-            ) { Text(stringResource(R.string.action_add_spacer), fontSize = 13.sp) }
-
-            TextButton(
-                onClick = onAddDivider,
-                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-            ) { Text(stringResource(R.string.action_add_divider), fontSize = 13.sp) }
+            AddTileMenu(onAdd, onAddLink, onAddContact)
 
             Spacer(Modifier.weight(1f))
 
@@ -81,6 +83,39 @@ fun EditToolbar(
         ) {
             StepControl(stringResource(R.string.label_columns), columns, 2, 5,  { onColumnsChange(columns - 1) }, { onColumnsChange(columns + 1) })
             StepControl(stringResource(R.string.label_rows),    rows,    1, 20, { onRowsChange(rows - 1) },       { onRowsChange(rows + 1) })
+        }
+    }
+}
+
+@Composable
+private fun AddTileMenu(
+    onAdd: (NewTile) -> Unit,
+    onAddLink: () -> Unit,
+    onAddContact: () -> Unit,
+) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        TextButton(
+            onClick = { open = true },
+            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+        ) { Text(stringResource(R.string.action_add_tile), fontSize = 13.sp) }
+
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            @Composable
+            fun item(label: Int, action: () -> Unit) = DropdownMenuItem(
+                text = { Text(stringResource(label), fontSize = 14.sp) },
+                onClick = { open = false; action() },
+            )
+            item(R.string.tile_spacer)  { onAdd(NewTile.SPACER) }
+            item(R.string.tile_divider) { onAdd(NewTile.DIVIDER) }
+            HorizontalDivider()
+            item(R.string.tile_clock)   { onAdd(NewTile.CLOCK) }
+            item(R.string.tile_date)    { onAdd(NewTile.DATE) }
+            item(R.string.tile_battery) { onAdd(NewTile.BATTERY) }
+            item(R.string.tile_alarm)   { onAdd(NewTile.ALARM) }
+            HorizontalDivider()
+            item(R.string.tile_link, onAddLink)
+            item(R.string.tile_contact, onAddContact)
         }
     }
 }
