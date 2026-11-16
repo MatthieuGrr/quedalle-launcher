@@ -14,9 +14,13 @@ just text on tiles.
 
 ## Screenshots
 
-| Home | Info & shortcuts | Paper | Mosaic | Outline |
-|---|---|---|---|---|
-| ![Default dark home screen](fastlane/metadata/android/en-US/images/phoneScreenshots/1_home.png) | ![Info tiles, shortcuts and textures](fastlane/metadata/android/en-US/images/phoneScreenshots/2_info.png) | ![Paper look: light, serif](fastlane/metadata/android/en-US/images/phoneScreenshots/3_paper.png) | ![Mosaic look: edge to edge, capitals](fastlane/metadata/android/en-US/images/phoneScreenshots/4_mosaic.png) | ![Outline look: thin strokes, monospace](fastlane/metadata/android/en-US/images/phoneScreenshots/5_outline.png) |
+<p align="center">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1_home.png" alt="Default dark home screen" width="19%">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2_info.png" alt="Info tiles, shortcuts and textures" width="19%">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3_paper.png" alt="Paper look: light, serif" width="19%">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4_mosaic.png" alt="Mosaic look: edge to edge, capitals" width="19%">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5_outline.png" alt="Outline look: thin strokes, monospace" width="19%">
+</p>
 
 The same launcher five times: only the settings differ.
 
