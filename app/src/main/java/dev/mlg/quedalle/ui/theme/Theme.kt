@@ -6,6 +6,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import dev.mlg.quedalle.model.blendArgb
 import dev.mlg.quedalle.model.ScreenLook
 import dev.mlg.quedalle.model.TextCase
 import dev.mlg.quedalle.model.TileFont
@@ -99,6 +100,24 @@ val LightPalette = QuedallePalette(
 )
 
 val LocalQuedallePalette = staticCompositionLocalOf { DarkPalette }
+
+/**
+ * This palette on a custom screen [background]. The surfaces drawn over
+ * the background (search field, edit toolbar, borders) are tints of it
+ * rather than fixed greys, so a warm or tinted background keeps its
+ * character instead of clashing with a neutral field.
+ */
+fun QuedallePalette.withBackground(background: Int): QuedallePalette {
+    val ink = textStrong.toArgb()
+    fun tint(fraction: Float) = Color(blendArgb(background, ink, fraction))
+    return copy(
+        background    = Color(background),
+        surfaceDim    = tint(0.04f),
+        fieldFocused  = tint(0.055f),
+        borderIdle    = tint(0.12f),
+        borderFocused = tint(0.2f),
+    )
+}
 
 /** Launcher-wide label settings (size, alignment, weight, font, case) of the tiles. */
 val LocalTileText = compositionLocalOf { TileText() }
@@ -220,7 +239,7 @@ fun LauncherTheme(themeMode: ThemeMode, screen: ScreenLook, content: @Composable
     }
 
     val base = if (dark) DarkPalette else LightPalette
-    val palette = screen.background(dark)?.let { base.copy(background = Color(it)) } ?: base
+    val palette = screen.background(dark)?.let(base::withBackground) ?: base
     CompositionLocalProvider(LocalQuedallePalette provides palette, LocalIsDark provides dark) {
         MaterialTheme(colorScheme = colorScheme, content = content)
     }

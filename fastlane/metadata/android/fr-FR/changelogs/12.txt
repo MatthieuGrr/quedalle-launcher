@@ -1,0 +1,2 @@
+• Le champ de recherche et la barre d'édition prennent désormais la teinte du fond d'écran choisi (chaude sur le thème Papier, par exemple)
+• Nouvelle présentation sur F-Droid : captures, bannière et description
