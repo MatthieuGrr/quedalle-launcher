@@ -1,0 +1,2 @@
+• The search field and edit toolbar now take the tint of the chosen screen background (e.g. warm on the Paper look)
+• New store presentation: screenshots, banner and description

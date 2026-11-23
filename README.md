@@ -124,8 +124,10 @@ screenshots, changelogs, one folder per language):
 Bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a
 `changelogs/<versionCode>.txt` (500 characters at most) in each language, then
 tag the commit (`v3.0`), or run the *Release* workflow with that tag. F-Droid
-picks up new tags on its own and builds the version whose `versionCode` went up;
-its build recipe lives in
+picks up new tags on its own and builds the version whose `versionCode` went up.
+It reads the descriptions, screenshots and changelogs from that tagged commit,
+so a change to the store presentation only shows once a new version is tagged.
+Its build recipe lives in
 [fdroiddata](https://gitlab.com/fdroid/fdroiddata/-/blob/master/metadata/dev.mlg.quedalle.yml).
 
 ## License
